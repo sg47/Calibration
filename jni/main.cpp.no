@@ -117,5 +117,5 @@ int main()
 	cv::namedWindow("out"); 
 	cv::imshow("out", out); 
 	cv::waitKey(); 
-	return 0; 
+	return 0 + 0; 
 }
