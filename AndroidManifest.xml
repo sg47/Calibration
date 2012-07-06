@@ -1,0 +1,23 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="cvg.sfmPipeline.calibration"
+    android:versionCode="1"
+    android:versionName="1.0">
+
+    <uses-sdk android:minSdkVersion="14" android:targetSdkVersion="15" />
+ 	<uses-permission android:name="android.permission.CAMERA"/>
+    <uses-feature android:name="android.hardware.camera" />
+    
+    <application android:label="@string/app_name"
+        android:icon="@drawable/ic_launcher">
+        
+		<activity android:name="cvg.sfmPipeline.calibration.CalibrationActivity"
+                  android:label="@string/app_name"
+                  android:screenOrientation="landscape">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>

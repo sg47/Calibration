@@ -1,0 +1,121 @@
+#include <iostream>
+#include <vector>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/calib3d/calib3d.hpp>
+
+#include "CataCameraParameters.h"
+#include "Chessboard.h"
+
+class MutualCalibration
+{
+	cv::Size mImageSize; 
+	cv::Size mBoardSize; 
+	float mSquareSize; 
+//	std::vector<cv::Mat> mChessboardImages; 
+	std::vector<std::vector<cv::Point2f> > mImagePoints; 
+	
+	vcharge::CataCameraParameters mCameraParam; 
+	std::vector<cv::Mat> mRsCamera, mtsCamera; 
+	std::vector<cv::Mat> mRsIMU; 
+
+	cv::Mat mCamera2IMU; 
+
+	bool mUseOpenCVCorner; 
+	bool mUseOpenCVCalibration; 
+
+protected:
+
+public:
+	MutualCalibration(size_t heightImage, size_t widthImage, size_t heightBoard, size_t widthBoard, 
+					  bool useOpenCVCorner = false, bool useOpenCVCalibration = true); 
+	bool tryAddingChessboardImage(cv::Mat & inputImage, cv::Mat & outputImage); 
+	void addIMUData() {}
+	size_t getNumberOfImages() const; 
+	void calibrateCamera(); 
+
+}; 
+
+MutualCalibration::MutualCalibration(size_t heightImage, size_t widthImage, size_t heightBoard, size_t widthBoard, 
+									 bool useOpenCVCorner, bool useOpenCVCalibration)
+	: mImageSize(cv::Size(widthImage, heightImage)), 
+	  mBoardSize(cv::Size(widthBoard, heightBoard)), 
+	  mUseOpenCVCorner(useOpenCVCorner), 
+	  mUseOpenCVCalibration(useOpenCVCalibration)
+{
+	mSquareSize = 1.0f; 
+}
+
+size_t 
+MutualCalibration::getNumberOfImages() const
+{
+	return mImagePoints.size(); 
+}
+
+bool 
+MutualCalibration::tryAddingChessboardImage(cv::Mat & inputImage, cv::Mat & outputImage)
+{
+	vcharge::Chessboard chessboard(mBoardSize, inputImage); 
+	chessboard.findCorners(mUseOpenCVCorner); 
+	chessboard.getSketch().copyTo(outputImage); 
+	if (!chessboard.cornersFound())
+		return false; 
+	else 
+	{
+		mImagePoints.push_back(chessboard.getCorners()); 
+		return true; 
+	}
+}
+
+void 
+MutualCalibration::calibrateCamera()
+{
+    std::vector< std::vector<cv::Point3f> > objectPoints;
+    for (int i = 0; i < mImagePoints.size(); ++i)
+    {
+    	std::vector<cv::Point3f> objectPointsInView;
+    	for (int j = 0; j < mBoardSize.height; ++j)
+    	{
+    		for (int k = 0; k < mBoardSize.width; ++k)
+    		{
+    			objectPointsInView.push_back(cv::Point3f(j * mSquareSize, k * mSquareSize, 0.0));
+    		}
+    	}
+    	objectPoints.push_back(objectPointsInView);
+    }
+
+	std::vector<cv::Mat> rvecs, tvecs; 
+	if (1)
+	{
+		cv::Mat cameraMatrix, distCoeffs; 
+		cv::calibrateCamera(objectPoints, mImagePoints, mImageSize, cameraMatrix, distCoeffs, rvecs, tvecs); 
+	}
+	mRsCamera.clear(); 
+	mtsCamera.clear(); 
+	for (size_t i = 0; i < rvecs.size(); i++)
+	{
+		cv::Mat R; 
+		cv::Rodrigues(rvecs[i], R); 
+		mRsCamera.push_back(R * 1.0); 
+		mtsCamera.push_back(tvecs[i] * 1.0); 
+	}
+//	std::cout << cameraMatrix << std::endl; 
+	
+}
+
+int main()
+{
+	cv::Mat image = cv::imread("cb.png"); 
+	cv::Size boardSize(7, 10); 
+	cv::Mat out; 
+
+	MutualCalibration mc(image.rows, image.cols, 7, 10); 
+
+	std::cout << mc.tryAddingChessboardImage(image, out) << std::endl; 
+
+	mc.calibrateCamera(); 
+	cv::namedWindow("out"); 
+	cv::imshow("out", out); 
+	cv::waitKey(); 
+	return 0; 
+}
