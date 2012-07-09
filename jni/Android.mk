@@ -13,6 +13,7 @@ else
 endif
 
 LOCAL_MODULE    := mixed_sample
-LOCAL_SRC_FILES := jni_part.cpp Chessboard.cpp
+LOCAL_SRC_FILES := calibration_wrap.cpp MutualCalibration.cpp Chessboard.cpp CataCameraParameters.cpp
+LOCAL_CFLAGS    := -frtti
 LOCAL_LDLIBS +=  -llog -ldl
 include $(BUILD_SHARED_LIBRARY)

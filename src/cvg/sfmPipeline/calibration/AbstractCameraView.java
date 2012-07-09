@@ -5,25 +5,22 @@ import java.util.List;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.graphics.ImageFormat;
 import android.hardware.Camera;
 import android.hardware.Camera.PreviewCallback;
-import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewGroup.LayoutParams;
 import android.widget.ImageView;
 
 public abstract class AbstractCameraView extends SurfaceView implements SurfaceHolder.Callback {
     private static final String TAG = "Calibration::AbstractSurfaceView";
     
-    public static final int CALIB_IMAGE = 0;
-    public static final int CAM_PREVIEW = 1;
+    public static final int 	CALIB_IMAGE = 0;
+    public static final int 	CAM_PREVIEW = 1;
 
     private Camera              mCamera;
     private SurfaceHolder       mHolder;
@@ -32,9 +29,8 @@ public abstract class AbstractCameraView extends SurfaceView implements SurfaceH
     private byte[]              mFrame;
     private Bitmap 				mBitmap;
     private ImageView			view;
-	private int 				mViewerState = CAM_PREVIEW;
     
-    public AbstractCameraView(Context context, AttributeSet attrs) {
+	public AbstractCameraView(Context context, AttributeSet attrs) {
         super(context,attrs);
         mHolder = getHolder();
         mHolder.addCallback(this);
@@ -72,8 +68,10 @@ public abstract class AbstractCameraView extends SurfaceView implements SurfaceH
     
     private PreviewCallback mPreviewListener = new PreviewCallback() {
         public void onPreviewFrame(byte[] data, Camera camera) {
+        	// TODO: remove mFrame variable?
         	mFrame = data;
         	changeSurfaceSize(R.id.cameraViewer, 0, 0);
+        	// process selected frame
         	mBitmap = processFrame(mFrame);
         	if (mBitmap != null) {
 	    		view.setImageBitmap(mBitmap);
@@ -84,6 +82,7 @@ public abstract class AbstractCameraView extends SurfaceView implements SurfaceH
 				public void run() {
 		        	view.setVisibility(View.GONE);
 		        	changeSurfaceSize(R.id.cameraViewer, 640, 480);
+		        	CalibrationActivity.setEnabledUI(true);
 				}}, 500);
         }
     };
@@ -113,10 +112,11 @@ public abstract class AbstractCameraView extends SurfaceView implements SurfaceH
                 
                 params.setPreviewSize(getFrameWidth(), getFrameHeight());
                 
-                List<String> FocusModes = params.getSupportedFocusModes();
-                if (FocusModes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO)){
-                	params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
-                }            
+//                List<String> FocusModes = params.getSupportedFocusModes();
+//                
+//                if (FocusModes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO)){
+                	params.setFocusMode(Camera.Parameters.FOCUS_MODE_INFINITY);
+//                }            
                 
                 mCamera.setParameters(params);
                 params = mCamera.getParameters();
@@ -188,6 +188,5 @@ public abstract class AbstractCameraView extends SurfaceView implements SurfaceH
      * Any other resources used during the preview can be released.
      */
     protected abstract void onPreviewStopped();
-
-    
+        
 }
