@@ -17,8 +17,8 @@ class MutualCalibration
 	std::vector<std::vector<cv::Point2f> > mImagePoints; 
 	
 	vcharge::CataCameraParameters mCameraParam; 
-	std::vector<cv::Mat> mrvecsCamera, mtvecsCamera; 
-	std::vector<cv::Mat> mrvecsIMU; 
+	std::vector<cv::Mat> mRsCamera, mtsCamera; 
+	std::vector<cv::Mat> mRsIMU; 
 
 	cv::Mat mCamera2IMU; 
 
@@ -36,6 +36,7 @@ public:
 	bool tryAddingChessboardImage(cv::Mat & inputImage, cv::Mat & outputImage); 
 	void addIMUData(double r0, double r1, double r2); 
 	size_t getNumberOfImages() const; 
+	std::vector<size_t> randPerm(size_t n) const; 
 	void calibrateCamera(); 
 	void mutualCalibrate(); 
 

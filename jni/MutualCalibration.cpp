@@ -30,6 +30,22 @@ MutualCalibration::getNumberOfImages() const
 	return mImagePoints.size(); 
 }
 
+std::vector<size_t>
+MutualCalibration::randPerm(size_t n) const 
+{
+	std::vector<size_t> perm; 
+	for(size_t i = 0; i < n; i++) perm.push_back(i);
+
+	for(size_t i = 0; i < n; i++) 
+	{	
+		size_t j = rand() % (n - i) + i;
+		size_t t = perm[j];
+		perm[j] = perm[i];
+		perm[i] = t;
+	}
+	return perm; 
+}
+
 void 
 MutualCalibration::addIMUData(double r0, double r1, double r2)
 {
@@ -41,17 +57,10 @@ MutualCalibration::addIMUData(double r0, double r1, double r2)
 	a = 2 * asin(a); 
 	rvec = rvec / cv::norm(rvec) * a; 
 
-	mrvecsIMU.push_back(rvec); 
-/*	cv::Mat R; 
-	cv::Rodrigues(rvec, R); 
-	R = R.t(); 
-
-	__android_log_print(
-	ANDROID_LOG_INFO, "IMUR", "%lf %lf %lf \n %lf %lf %lf \n %lf %lf %lf", 
-		R.at<double>(0, 0), R.at<double>(0, 1), R.at<double>(0, 2), 
-		R.at<double>(1, 0), R.at<double>(1, 1), R.at<double>(1, 2), 
-		R.at<double>(2, 0), R.at<double>(2, 1), R.at<double>(2, 2));
-*/		
+	cv::Mat RIMU; 
+	cv::Rodrigues(rvec, RIMU); 
+	RIMU = RIMU.t(); 
+	mRsIMU.push_back(RIMU * 1.0); 
 }
 
 bool 
@@ -86,83 +95,78 @@ MutualCalibration::calibrateCamera()
     	objectPoints.push_back(objectPointsInView);
     }
 
-cv::Mat cameraMatrix, distCoeffs; 
+	cv::Mat cameraMatrix, distCoeffs; 
+	std::vector<cv::Mat> rvecs; 
 	if (1)
-	{
-		
-		cv::calibrateCamera(objectPoints, mImagePoints, mImageSize, cameraMatrix, distCoeffs, mrvecsCamera, mtvecsCamera); 
-	}
-
-/*	for (size_t i = 0; i < objectPoints.size(); i++)
-		for (size_t j = 0; j < objectPoints[i].size(); j++)
+	{	
+		cv::calibrateCamera(objectPoints, mImagePoints, mImageSize, cameraMatrix, distCoeffs, rvecs, mtsCamera); 
+		for (size_t i = 0; i < rvecs.size(); i++)
 		{
-			cv::Mat X(3, 1, CV_64F); 
-			X.at<double>(0) = objectPoints[i][j].x; 
-			X.at<double>(1) = objectPoints[i][j].y; 
-			X.at<double>(2) = 0; 
-
-			cv::Mat R, t, x; 
-			cv::Rodrigues(mrvecsCamera[i], R); 
-			t = mtvecsCamera[i]; 
-			x = cameraMatrix * (R * X + t); 
-			float xx = x.at<double>(0) / x.at<double>(2); 
-			float yy = x.at<double>(1) / x.at<double>(2); 
-			x = cameraMatrix * (R.t() * X + t); 
-			float xxx = x.at<double>(0) / x.at<double>(2); 
-			float yyy = x.at<double>(1) / x.at<double>(2); 
-	
-				__android_log_print(
-	ANDROID_LOG_INFO, "project", "%lf %lf | %lf %lf | %lf %lf", 
-	xx, yy, xxx, yyy, mImagePoints[i][j].x, mImagePoints[i][j].y); 
-
+			cv::Mat RCamera; 
+			cv::Rodrigues(rvecs[i], RCamera); 
+			mRsCamera.push_back(RCamera * 1.0); 
 		}
-*/
-	
+	}
+		
 }
 
 
 void 
 MutualCalibration::mutualCalibrate()
 {
-	std::vector<cv::Mat> qsDiff; 
-	
-		cv::Mat P(3, 3, CV_64F); 
-		P.at<double>(0, 0) = 0; 
-		P.at<double>(0, 1) = -1; 
-		P.at<double>(0, 2) = 0; 
-		P.at<double>(1, 0) = -1; 
-		P.at<double>(1, 1) = 0; 
-		P.at<double>(1, 2) = 0; 
-		P.at<double>(2, 0) = 0; 
-		P.at<double>(2, 1) = 0; 
-		P.at<double>(2, 2) = -1; 
+	if (mRsCamera.size() != mRsIMU.size()) exit(-1); 
 
-	cv::Mat averQuat(4, 1, CV_64F); 
-	for (size_t i = 0; i < mrvecsCamera.size(); i++)
+	cv::Mat vsCamera(3, mRsCamera.size(), CV_64F); 
+	cv::Mat vsIMU(3, mtsCamera.size(), CV_64F); 
+	for (size_t i = 0; i < mRsCamera.size(); i++)
 	{
-		cv::Mat RCamera(3, 3, CV_64F), RIMU(3, 3, CV_64F); 
-		cv::Rodrigues(mrvecsCamera[i], RCamera); 
-		cv::Rodrigues(mrvecsIMU[i], RIMU); 
-		RIMU = RIMU.t(); 		
-
-		cv::Mat Q(3, 3, CV_64F); 
-
-		__android_log_print(
-		ANDROID_LOG_INFO, "ri", "%lf %lf %lf", RIMU.at<double>(0, 2), RIMU.at<double>(1, 2), RIMU.at<double>(2, 2));
-		__android_log_print(
-		ANDROID_LOG_INFO, "rc", "%lf %lf %lf", RCamera.at<double>(0, 2), RCamera.at<double>(1, 2), RCamera.at<double>(2, 2));
-	
-
+		vsCamera.col(i) = mRsCamera[i].col(3); 
+		vsIMU.col(i) = mRsIMU[i].col(3); 
 	}
-	cv::normalize(averQuat, averQuat); 
 
-	for (size_t i = 0; i < qsDiff.size(); i++)
+	// RANSAC
+	size_t it = 0; 
+	size_t max_iter = 100; 
+	cv::Mat R_best; 
+	size_t max_inliers = 0; 
+
+	while (it < max_iter)
 	{
-		rotationTest.push_back(qsDiff[i].at<double>(0)); 
-		rotationTest.push_back(qsDiff[i].at<double>(1)); 
-		rotationTest.push_back(qsDiff[i].at<double>(2)); 
-		rotationTest.push_back(qsDiff[i].at<double>(3)); 
+		std::vector<size_t> perm = randPerm(vsCamera.size()); 
+		cv::Mat VsCamera(3, 3, CV_64F); 
+		VsCamera.col(0) = vsCamera.col(perm[0]); 
+		VsCamera.col(1) = vsCamera.col(perm[1]); 
+		VsCamera.col(2) = vsCamera.col(perm[2]); 
+		cv::Mat VsIMU(3, 3, CV_64F); 
+		VsIMU.col(0) = vsIMU.col(perm[0]); 
+		VsIMU.col(1) = vsIMU.col(perm[1]); 
+		VsIMU.col(2) = vsIMU.col(perm[2]); 
+
+		// Kabsch algorihm from wikipedia
+		cv::Mat A = VsIMU * VsCamera.t(); 
+		cv::Mat S, U, Vt; 
+		cv::svd::compute(A, S, U, Vt); 
+		cv::Mat R = U * Vt; 			
+
+		cv::Mat Vs = R * VsCamera; 
+		size_t inliers = 0; 
+		for (size_t i = 0; i < Vs.cols; i++)
+		{
+			if (cv::norm(Vs.col(i) - VsIMU.col(i)) < 0.05) inliers++; 
+		}
+		if (inliers > max_inlers) 
+		{
+			R.copyTo(R_best); 
+			max_inliers = inliers; 
+		}
 	}
-	pRotationTest = &rotationTest[0]; 	
+	__android_log_print(
+			ANDR_bestOID_LOG_INFO, "R_best", "%lf %lf %lf \n %lf %lf %lf \n %lf %lf %lf",
+			R_best.at<double>(0, 0), R_best.at<double>(0, 1), R_best.at<double>(0, 2),
+			R_best.at<double>(1, 0), R_best.at<double>(1, 1), R_best.at<double>(1, 2),
+			R_best.at<double>(2, 0), R_best.at<double>(2, 1), R_best.at<double>(2, 2));
+
+
+
 }
 
