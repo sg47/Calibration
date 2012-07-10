@@ -86,11 +86,37 @@ MutualCalibration::calibrateCamera()
     	objectPoints.push_back(objectPointsInView);
     }
 
+cv::Mat cameraMatrix, distCoeffs; 
 	if (1)
 	{
-		cv::Mat cameraMatrix, distCoeffs; 
+		
 		cv::calibrateCamera(objectPoints, mImagePoints, mImageSize, cameraMatrix, distCoeffs, mrvecsCamera, mtvecsCamera); 
 	}
+
+/*	for (size_t i = 0; i < objectPoints.size(); i++)
+		for (size_t j = 0; j < objectPoints[i].size(); j++)
+		{
+			cv::Mat X(3, 1, CV_64F); 
+			X.at<double>(0) = objectPoints[i][j].x; 
+			X.at<double>(1) = objectPoints[i][j].y; 
+			X.at<double>(2) = 0; 
+
+			cv::Mat R, t, x; 
+			cv::Rodrigues(mrvecsCamera[i], R); 
+			t = mtvecsCamera[i]; 
+			x = cameraMatrix * (R * X + t); 
+			float xx = x.at<double>(0) / x.at<double>(2); 
+			float yy = x.at<double>(1) / x.at<double>(2); 
+			x = cameraMatrix * (R.t() * X + t); 
+			float xxx = x.at<double>(0) / x.at<double>(2); 
+			float yyy = x.at<double>(1) / x.at<double>(2); 
+	
+				__android_log_print(
+	ANDROID_LOG_INFO, "project", "%lf %lf | %lf %lf | %lf %lf", 
+	xx, yy, xxx, yyy, mImagePoints[i][j].x, mImagePoints[i][j].y); 
+
+		}
+*/
 	
 }
 
@@ -100,78 +126,32 @@ MutualCalibration::mutualCalibrate()
 {
 	std::vector<cv::Mat> qsDiff; 
 	
+		cv::Mat P(3, 3, CV_64F); 
+		P.at<double>(0, 0) = 0; 
+		P.at<double>(0, 1) = -1; 
+		P.at<double>(0, 2) = 0; 
+		P.at<double>(1, 0) = -1; 
+		P.at<double>(1, 1) = 0; 
+		P.at<double>(1, 2) = 0; 
+		P.at<double>(2, 0) = 0; 
+		P.at<double>(2, 1) = 0; 
+		P.at<double>(2, 2) = -1; 
+
 	cv::Mat averQuat(4, 1, CV_64F); 
 	for (size_t i = 0; i < mrvecsCamera.size(); i++)
 	{
 		cv::Mat RCamera(3, 3, CV_64F), RIMU(3, 3, CV_64F); 
 		cv::Rodrigues(mrvecsCamera[i], RCamera); 
 		cv::Rodrigues(mrvecsIMU[i], RIMU); 
-		RIMU = RIMU.t(); 
+		RIMU = RIMU.t(); 		
+
+		cv::Mat Q(3, 3, CV_64F); 
 
 		__android_log_print(
-		ANDROID_LOG_INFO, "RCamera", "%lf %lf %lf \n %lf %lf %lf \n %lf %lf %lf \n", 
-			RCamera.at<double>(0, 0), RCamera.at<double>(0, 1), RCamera.at<double>(0, 2), 
-			RCamera.at<double>(1, 0), RCamera.at<double>(1, 1), RCamera.at<double>(1, 2), 
-			RCamera.at<double>(2, 0), RCamera.at<double>(2, 1), RCamera.at<double>(2, 2));
+		ANDROID_LOG_INFO, "ri", "%lf %lf %lf", RIMU.at<double>(0, 2), RIMU.at<double>(1, 2), RIMU.at<double>(2, 2));
 		__android_log_print(
-		ANDROID_LOG_INFO, "RIMU", "%lf %lf %lf \n %lf %lf %lf \n %lf %lf %lf \n", 
-			RIMU.at<double>(0, 0), RIMU.at<double>(0, 1), RIMU.at<double>(0, 2), 
-			RIMU.at<double>(1, 0), RIMU.at<double>(1, 1), RIMU.at<double>(1, 2), 
-			RIMU.at<double>(2, 0), RIMU.at<double>(2, 1), RIMU.at<double>(2, 2));
-
-
-
-		cv::Mat RDiff = RIMU.inv() * RCamera; 
-		cv::Mat rDiff; 
-		cv::Rodrigues(RDiff, rDiff); 
-
-		double dp = RIMU.col(2).dot(RCamera.col(2)); 
-		__android_log_print(
-		ANDROID_LOG_INFO, "dotproduct", "%lf", dp);
-
-		cv::Mat qDiff(4, 1, CV_64F); 
-		double a, x, y, z; 
-		a = cv::norm(rDiff); 
-		x = rDiff.at<double>(0) / a; 
-		y = rDiff.at<double>(1) / a; 
-		z = rDiff.at<double>(2) / a;  
-		qDiff.at<double>(0) = cv::cos(a / 2.0); 
-		qDiff.at<double>(1) = -cv::sin(a / 2.0) * x; 
-		qDiff.at<double>(2) = -cv::sin(a / 2.0) * y; 
-		qDiff.at<double>(3) = -cv::sin(a / 2.0) * z; 
-
-		averQuat += qDiff; 
-		qsDiff.push_back(qDiff); 
-		std::cout << qDiff << std::endl; 
-
-		__android_log_print(
-		ANDROID_LOG_INFO, "qDiff", "%lf %lf %lf %lf", qDiff.at<double>(0), qDiff.at<double>(1), qDiff.at<double>(2), qDiff.at<double>(3));
-		
-
-
-/*		a = cv::norm(mrvecsCamera[i]); 
-		x = mrvecsCamera[i].at<double>(0) / a; 
-		y = mrvecsCamera[i].at<double>(1) / a; 
-		z = mrvecsCamera[i].at<double>(2) / a; 
-		boost::math::quaternion<double> q1(
-				cos(a / 2.0), 
-				-sin(a / 2.0) * x, 
-				-sin(a / 2.0) * y, 
-				-sin(a / 2.0) * z); 
-
-
-		a = cv::norm(mrvecsIMU[i]); 
-		x = mrvecsIMU[i].at<double>(0) / a; 
-		y = mrvecsIMU[i].at<double>(1) / a; 
-		z = mrvecsIMU[i].at<double>(2) / a; 
-		boost::math::quaternion<double> q2(
-				cos(a / 2.0), 
-				-sin(a / 2.0) * x, 
-				-sin(a / 2.0) * y, 
-				-sin(a / 2.0) * z); 
-		std::cout << q1 / q2 << std::endl; 
-		std::cout << q2 / q1 << std::endl; 
-*/
+		ANDROID_LOG_INFO, "rc", "%lf %lf %lf", RCamera.at<double>(0, 2), RCamera.at<double>(1, 2), RCamera.at<double>(2, 2));
+	
 
 	}
 	cv::normalize(averQuat, averQuat); 

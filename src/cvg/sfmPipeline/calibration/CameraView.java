@@ -69,7 +69,7 @@ public class CameraView extends AbstractCameraView {
         mRgba = null;
         mGraySubmat = null;		
 	}
-
+	
     @Override
     protected Bitmap processFrame(byte[] data) {
     	float[] afterSensor = CalibrationActivity.latestSensor;
