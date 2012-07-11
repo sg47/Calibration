@@ -11,6 +11,16 @@
 #include "Chessboard.h"
 #include "MutualCalibration.h"
 
+void showMat(cv::Mat R, const char* s)
+{
+	__android_log_print(
+			ANDROID_LOG_INFO, s, "%lf %lf %lf \n %lf %lf %lf \n %lf %lf %lf\n",
+			R.at<double>(0, 0), R.at<double>(0, 1), R.at<double>(0, 2),
+			R.at<double>(1, 0), R.at<double>(1, 1), R.at<double>(1, 2),
+			R.at<double>(2, 0), R.at<double>(2, 1), R.at<double>(2, 2));
+}
+
+
 
 
 
@@ -39,10 +49,15 @@ MutualCalibration::randPerm(size_t n) const
 	for(size_t i = 0; i < n; i++) 
 	{	
 		size_t j = rand() % (n - i) + i;
+
 		size_t t = perm[j];
 		perm[j] = perm[i];
 		perm[i] = t;
 	}
+
+	__android_log_print(
+				ANDROID_LOG_INFO, "perm", "%d, %d, %d", perm[0], perm[1], perm[2]);
+
 	return perm; 
 }
 
@@ -116,36 +131,43 @@ MutualCalibration::mutualCalibrate()
 {
 	if (mRsCamera.size() != mRsIMU.size()) exit(-1); 
 
+	showMat(mRsCamera[0], "mRsCamera");
 	cv::Mat vsCamera(3, mRsCamera.size(), CV_64F); 
 	cv::Mat vsIMU(3, mtsCamera.size(), CV_64F); 
 	for (size_t i = 0; i < mRsCamera.size(); i++)
 	{
-		vsCamera.col(i) = mRsCamera[i].col(3); 
-		vsIMU.col(i) = mRsIMU[i].col(3); 
+		vsCamera.col(i) = mRsCamera[i].col(2) * 1.0;
+		vsIMU.col(i) = mRsIMU[i].col(2) * 1.0;
 	}
+
+	showMat(vsIMU, "vsIMU");
+	showMat(vsCamera, "vsCamera");
 
 	// RANSAC
 	size_t it = 0; 
-	size_t max_iter = 100; 
+	size_t max_iter = 1;
 	cv::Mat R_best; 
 	size_t max_inliers = 0; 
 
 	while (it < max_iter)
 	{
-		std::vector<size_t> perm = randPerm(vsCamera.size()); 
+		std::vector<size_t> perm = randPerm(vsCamera.cols);
 		cv::Mat VsCamera(3, 3, CV_64F); 
-		VsCamera.col(0) = vsCamera.col(perm[0]); 
-		VsCamera.col(1) = vsCamera.col(perm[1]); 
-		VsCamera.col(2) = vsCamera.col(perm[2]); 
+		VsCamera.col(0) = vsCamera.col(perm[0]) * 1.0;
+		VsCamera.col(1) = vsCamera.col(perm[1]) * 1.0;
+		VsCamera.col(2) = vsCamera.col(perm[2]) * 1.0;
 		cv::Mat VsIMU(3, 3, CV_64F); 
-		VsIMU.col(0) = vsIMU.col(perm[0]); 
-		VsIMU.col(1) = vsIMU.col(perm[1]); 
-		VsIMU.col(2) = vsIMU.col(perm[2]); 
+		VsIMU.col(0) = vsIMU.col(perm[0]) * 1.0;
+		VsIMU.col(1) = vsIMU.col(perm[1]) * 1.0;
+		VsIMU.col(2) = vsIMU.col(perm[2]) * 1.0;
 
 		// Kabsch algorihm from wikipedia
-		cv::Mat A = VsIMU * VsCamera.t(); 
+		cv::Mat A = VsIMU * VsCamera.t();
+		showMat(VsIMU, "VsIMU");
+		showMat(VsCamera, "VsCamera");
+		showMat(A, "A");
 		cv::Mat S, U, Vt; 
-		cv::svd::compute(A, S, U, Vt); 
+		cv::SVD::compute(A, S, U, Vt);
 		cv::Mat R = U * Vt; 			
 
 		cv::Mat Vs = R * VsCamera; 
@@ -154,14 +176,22 @@ MutualCalibration::mutualCalibrate()
 		{
 			if (cv::norm(Vs.col(i) - VsIMU.col(i)) < 0.05) inliers++; 
 		}
-		if (inliers > max_inlers) 
+		if (inliers > max_inliers)
 		{
 			R.copyTo(R_best); 
 			max_inliers = inliers; 
 		}
+		it++;
+
+		__android_log_print(
+				ANDROID_LOG_INFO, "R", "%lf %lf %lf \n %lf %lf %lf \n %lf %lf %lf\n",
+				R.at<double>(0, 0), R.at<double>(0, 1), R.at<double>(0, 2),
+				R.at<double>(1, 0), R.at<double>(1, 1), R.at<double>(1, 2),
+				R.at<double>(2, 0), R.at<double>(2, 1), R.at<double>(2, 2));
+
 	}
 	__android_log_print(
-			ANDR_bestOID_LOG_INFO, "R_best", "%lf %lf %lf \n %lf %lf %lf \n %lf %lf %lf",
+			ANDROID_LOG_INFO, "R_best", "%lf %lf %lf \n %lf %lf %lf \n %lf %lf %lf\n",
 			R_best.at<double>(0, 0), R_best.at<double>(0, 1), R_best.at<double>(0, 2),
 			R_best.at<double>(1, 0), R_best.at<double>(1, 1), R_best.at<double>(1, 2),
 			R_best.at<double>(2, 0), R_best.at<double>(2, 1), R_best.at<double>(2, 2));
