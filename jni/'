@@ -45,8 +45,6 @@ protected:
 
 	double 
 		mod(double x, double d) const; 
-	std::vector<size_t>
-		randPerm(size_t n) const; 
 	cv::Point2f 
 		convergeLines(const std::vector<cv::Vec4i> & lines) const; 
 	std::vector<cv::Point2f> 
@@ -67,7 +65,7 @@ protected:
 	void 	
 		findInteriorVanishingPt(const std::vector<cv::Point2f> & pts, float & intVPTheta, float & intVPRho) const; 
 	void 	
-		findInteriorVanishingPt(const std::vector<cv::Vec4i> & lines, float & intVPTheta, float & intVPRho) const; 
+		findInteriorVanishingPt(const std::vector<Vec4i> & lines, float & intVPTheta, float & intVPRho) const; 
 	void
 		find3rdDegenVanishingPt(const std::vector<cv::Point2f> & pts, 
 				const std::vector<float> & thetas, const std::vector<float> & rhos, 

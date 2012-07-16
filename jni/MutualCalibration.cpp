@@ -80,8 +80,8 @@ MutualCalibration::randPerm(size_t n) const
 		perm[i] = t;
 	}
 
-	__android_log_print(
-				ANDROID_LOG_INFO, "perm", "%d, %d, %d", perm[0], perm[1], perm[2]);
+//	__android_log_print(
+//				ANDROID_LOG_INFO, "perm", "%d, %d, %d", perm[0], perm[1], perm[2]);
 
 	return perm; 
 }
