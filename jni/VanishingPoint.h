@@ -33,6 +33,7 @@ public:
 
 	void findOrthogonalVanishingPts(); 
 	std::vector<cv::Point2f> getVanishingPts() const; 
+	cv::Mat getRotation() const; 
 
 	void 
 		showLines(const std::vector<cv::Vec4i> & lines) const; 

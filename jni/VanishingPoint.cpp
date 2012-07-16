@@ -59,6 +59,31 @@ Cas1DVanishingPoint::getVanishingPts() const
 	return mVanishingPts; 
 }
 
+cv::Mat
+Cas1DVanishingPoint::getRotation() const
+{
+	
+	if (focalAvailable()) 
+	{
+		cv::Mat R(3, 3, CV_64F); 
+		for (size_t i = 0; i < 3; i++)
+		{
+			float len = hypot(mFocal, hypot(mVanishingPts[i].x, mVanishingPts[i].y)); 
+			R.at<double>(0, i) = mVanishingPts.x / len; 
+			R.at<double>(1, i) = mVanishingPts.y / len; 
+			R.at<double>(2, i) = mFocal / len; 
+		}
+		return R * 1.0; 
+	}
+	else if (mMessage == THREE_DETECTED_WITH_TWO_INFINITE)
+	{
+		return cv::Mat::eye(3, 3, CV_64F); 
+	}
+	else 
+	{
+		return cv::Mat(); 
+	}
+}
 cv::Mat 
 Cas1DVanishingPoint::getSketch() const
 {

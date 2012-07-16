@@ -17,7 +17,8 @@ class MutualCalibration
 	std::vector<std::vector<cv::Point2f> > mImagePoints; 
 	
 	vcharge::CataCameraParameters mCameraParam; 
-	std::vector<cv::Mat> mRsCamera, mtsCamera; 
+	std::vector<cv::Mat> mRsCamera, mtsCamera, mgsCamera; 
+	std::vector<float> mfsCamera; 
 	std::vector<cv::Mat> mRsIMU, mgsIMU; 
 
 	cv::Mat mCamera2IMU; 

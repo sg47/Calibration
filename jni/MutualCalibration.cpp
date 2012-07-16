@@ -130,19 +130,30 @@ MutualCalibration::tryAddingChessboardImage(cv::Mat & inputImage, cv::Mat & outp
 bool
 MutualCalibration::tryAddingVanishingPointImage(cv::Mat & inputImage, cv::Mat & outputImage)
 {
-	__android_log_print(
-			ANDROID_LOG_INFO, "vp", "here"); 
 	Cas1DVanishingPoint vanishingPoint(inputImage); 
 	vanishingPoint.findOrthogonalVanishingPts(); 
-	__android_log_print(
-			ANDROID_LOG_INFO, "vp", "here"); 
 	vanishingPoint.getSketch().copyTo(outputImage); 
-	return vanishingPoint.threeDetected(); 
+	if (vanishingPoint.threeDetected())
+	{
+		cv::Mat R = vanishingPoint.getRotation(); 
+		size_t idx = 0; 
+		for (size_t i = 0; i < 3; i++)
+		{
+			if (fabs(R.at<double>(1, idx) < fabs(R.at<double>(1, i))) 
+				idx = i; 
+		}
+		if (R.at<double>(1, idx) > 0) 
+			mgsCamera.push_back(R.col(idx) * 1.0); 
+		else mgsCamera.push_back(R.col(idx) * -1.0); 
+	}
+	else return false; 
 }
 
 void 
 MutualCalibration::calibrateCamera()
 {
+	if (mImagePoints.empty()) return; 
+	
     std::vector< std::vector<cv::Point3f> > objectPoints;
     for (int i = 0; i < mImagePoints.size(); ++i)
     {
@@ -167,6 +178,7 @@ MutualCalibration::calibrateCamera()
 			cv::Mat RCamera; 
 			cv::Rodrigues(rvecs[i], RCamera); 
 			mRsCamera.push_back(RCamera * 1.0); 
+			mgsCamera.push_back(RCamera.col(2) * 1.0); 
 		}
 	}
 		
@@ -181,12 +193,12 @@ MutualCalibration::lsMutualCalibrateWithHorizontalChessboard()
 	{
 		if (mUseOnlyIMUGravity)
 		{
-			S.col(i) = -mRsCamera[i].col(2) * 1.0; 
+			S.col(i) = -mgsCamera[i] * 1.0; 
 			T.col(i) = mgsIMU[i] * 1.0; 
 		}
 		else
 		{
-			S.col(i) = mRsCamera[i].col(2) * 1.0; 
+			S.col(i) = mgsCamera[i] * 1.0; 
 			T.col(i) = mRsIMU[i].col(2) * 1.0; 
 		}
 	}
@@ -226,9 +238,9 @@ MutualCalibration::ransacMutualCalibrateWithHorizontalChessboard()
 			// R * S = T
 			// S = R_c * [0; 0; -1] 
 			// T = g
-			S.col(0) = -mRsCamera[perm[0]].col(2) * 1.0; 
-			S.col(1) = -mRsCamera[perm[1]].col(2) * 1.0; 
-			S.col(2) = -mRsCamera[perm[2]].col(2) * 1.0; 
+			S.col(0) = -mgsCamera[perm[0]] * 1.0; 
+			S.col(1) = -mgsCamera[perm[1]] * 1.0; 
+			S.col(2) = -mgsCamera[perm[2]] * 1.0; 
 			T.col(0) = mgsIMU[perm[0]] * 1.0; 
 			T.col(1) = mgsIMU[perm[1]] * 1.0; 
 			T.col(2) = mgsIMU[perm[2]] * 1.0;
@@ -238,9 +250,9 @@ MutualCalibration::ransacMutualCalibrateWithHorizontalChessboard()
 			// R * S = T
 			// S = R_c * [0; 0; 1]
 			// T = R_i * [0; 0; 1]
-			S.col(0) = mRsCamera[perm[0]].col(2) * 1.0; 
-			S.col(1) = mRsCamera[perm[1]].col(2) * 1.0; 
-			S.col(2) = mRsCamera[perm[2]].col(2) * 1.0; 
+			S.col(0) = mgsCamera[perm[0]] * 1.0; 
+			S.col(1) = mgsCamera[perm[1]] * 1.0; 
+			S.col(2) = mgsCamera[perm[2]] * 1.0; 
 			T.col(0) = mRsIMU[perm[0]].col(2) * 1.0; 
 			T.col(1) = mRsIMU[perm[1]].col(2) * 1.0; 
 			T.col(2) = mRsIMU[perm[2]].col(2) * 1.0; 
@@ -255,13 +267,13 @@ MutualCalibration::ransacMutualCalibrateWithHorizontalChessboard()
 		cv::Mat V(3, mRsCamera.size(), CV_64F); 
 		if (mUseOnlyIMUGravity)
 		{
-			for (size_t i = 0; i < mRsCamera.size(); i++)
-				V.col(i) = -mRsCamera[i].col(2) * 1.0; 
+			for (size_t i = 0; i < mgsCamera.size(); i++)
+				V.col(i) = -mgsCamera[i] * 1.0; 
 		}
 		else
 		{
-			for (size_t i = 0; i < mRsCamera.size(); i++)
-				V.col(i) = mRsCamera[i].col(2) * 1.0; 
+			for (size_t i = 0; i < mgsCamera.size(); i++)
+				V.col(i) = mgsCamera[i] * 1.0; 
 		}
 
 		cv::Mat Vs = R * V; 
