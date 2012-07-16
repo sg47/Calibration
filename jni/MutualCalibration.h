@@ -32,6 +32,8 @@ class MutualCalibration
 	bool mChessboardMeasured; 
 	double mZChessboardNormal; 
 
+	size_t mChessboardImages, mVanishingPointImages; 
+
 protected:
 
 public:

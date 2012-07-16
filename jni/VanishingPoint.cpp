@@ -69,10 +69,17 @@ Cas1DVanishingPoint::getRotation() const
 		for (size_t i = 0; i < 3; i++)
 		{
 			float len = hypot(mFocal, hypot(mVanishingPts[i].x, mVanishingPts[i].y)); 
-			R.at<double>(0, i) = mVanishingPts.x / len; 
-			R.at<double>(1, i) = mVanishingPts.y / len; 
-			R.at<double>(2, i) = mFocal / len; 
+			R.at<double>(0, i) = mVanishingPts[i].x / len; 
+			R.at<double>(1, i) = mVanishingPts[i].y / len; 
+			R.at<double>(2, i) = -mFocal / len; 
 		}
+
+			__android_log_print(
+			ANDROID_LOG_INFO, "vR", "%lf %lf %lf \n   %lf %lf %lf \n %lf %lf %lf\n",
+			R.at<double>(0, 0), R.at<double>(0, 1), R.at<double>(0, 2),
+			R.at<double>(1, 0), R.at<double>(1, 1), R.at<double>(1, 2),
+			R.at<double>(2, 0), R.at<double>(2, 1), R.at<double>(2, 2));
+
 		return R * 1.0; 
 	}
 	else if (mMessage == THREE_DETECTED_WITH_TWO_INFINITE)

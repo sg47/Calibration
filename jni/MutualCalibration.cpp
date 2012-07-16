@@ -1,4 +1,4 @@
-
+#include <algorithm>
 #include <vector>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -36,7 +36,9 @@ MutualCalibration::MutualCalibration(size_t heightImage, size_t widthImage, size
 	  mUseOnlyIMUGravity(useOnlyIMUGravity), 
 	  mUseChessboardHorizontal(useChessboardHorizontal), 
 	  mUseRANSAC(useRANSAC), 
-	  mChessboardMeasured(false)
+	  mChessboardMeasured(false), 
+	  mChessboardImages(0), 
+	  mVanishingPointImages(0)
 {
 	mSquareSize = 1.0f; 
 }
@@ -44,7 +46,7 @@ MutualCalibration::MutualCalibration(size_t heightImage, size_t widthImage, size
 size_t 
 MutualCalibration::getNumberOfImages() const
 {
-	return mImagePoints.size(); 
+	return std::max(mChessboardImages, mVanishingPointImages); 
 }
 
 void
@@ -123,6 +125,7 @@ MutualCalibration::tryAddingChessboardImage(cv::Mat & inputImage, cv::Mat & outp
 	else 
 	{
 		mImagePoints.push_back(chessboard.getCorners()); 
+		mChessboardImages++; 
 		return true; 
 	}
 }
@@ -139,12 +142,17 @@ MutualCalibration::tryAddingVanishingPointImage(cv::Mat & inputImage, cv::Mat & 
 		size_t idx = 0; 
 		for (size_t i = 0; i < 3; i++)
 		{
-			if (fabs(R.at<double>(1, idx) < fabs(R.at<double>(1, i))) 
+			if (fabs(R.at<double>(1, idx) < fabs(R.at<double>(1, i))) )
 				idx = i; 
 		}
+		__android_log_print(
+				ANDROID_LOG_INFO, "g", "%lf, %lf, %lf", R.at<double>(0, idx), R.at<double>(1, idx), R.at<double>(2, idx));
 		if (R.at<double>(1, idx) > 0) 
 			mgsCamera.push_back(R.col(idx) * 1.0); 
 		else mgsCamera.push_back(R.col(idx) * -1.0); 
+
+		mVanishingPointImages++; 
+		return true; 
 	}
 	else return false; 
 }
@@ -187,9 +195,9 @@ MutualCalibration::calibrateCamera()
 void 
 MutualCalibration::lsMutualCalibrateWithHorizontalChessboard()
 {
-	cv::Mat S(3, mRsCamera.size(), CV_64F); 
-	cv::Mat T(3, mRsCamera.size(), CV_64F); 
-	for (size_t i = 0; i < mRsCamera.size(); i++)
+	cv::Mat S(3, mgsCamera.size(), CV_64F); 
+	cv::Mat T(3, mgsCamera.size(), CV_64F); 
+	for (size_t i = 0; i < mgsCamera.size(); i++)
 	{
 		if (mUseOnlyIMUGravity)
 		{
@@ -202,6 +210,12 @@ MutualCalibration::lsMutualCalibrateWithHorizontalChessboard()
 			T.col(i) = mRsIMU[i].col(2) * 1.0; 
 		}
 	}
+__android_log_print(
+			ANDROID_LOG_INFO, "R", "%d %d", S.cols, S.rows); 
+
+	showMat(S, "S"); 
+	showMat(T, "T");
+
 	// Kabsch algorihm from wikipedia
 	cv::Mat A = T * S.t();
 	cv::Mat D, U, Vt; 
