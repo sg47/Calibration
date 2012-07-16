@@ -40,6 +40,7 @@ public:
 					  bool useOnlyIMUGravity = false, bool useChessboardHorizontal = true, 
 					  bool useRANSAC = false); 
 	bool tryAddingChessboardImage(cv::Mat & inputImage, cv::Mat & outputImage); 
+	bool tryAddingVanishingPointImage(cv::Mat & inputImage, cv::Mat & outputImage); 
 	void addFullIMURotationByQuaternion(double r0, double r1, double r2); 
 	void addIMUGravityVector(double g1, double g2, double g3); 
 	size_t getNumberOfImages() const; 

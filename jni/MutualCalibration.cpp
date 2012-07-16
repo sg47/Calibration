@@ -9,6 +9,7 @@
 
 #include "CataCameraParameters.h"
 #include "Chessboard.h"
+#include "VanishingPoint.h"
 #include "MutualCalibration.h"
 
 void showMat(cv::Mat R, const char* s)
@@ -124,6 +125,15 @@ MutualCalibration::tryAddingChessboardImage(cv::Mat & inputImage, cv::Mat & outp
 		mImagePoints.push_back(chessboard.getCorners()); 
 		return true; 
 	}
+}
+
+bool
+MutualCalibration::tryAddingChessboardImage(cv::Mat & inputImage, cv::Mat & outputImage)
+{
+	VanishingPoint vanishingPoint(inputImage); 
+	vanishingPoint.findOrthogonalVanishingPts(); 
+	vanishingPoint.getSketch().copyTo(outputImage); 
+	return vanishingPoint.threeDetected(); 
 }
 
 void 
