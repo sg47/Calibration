@@ -1016,6 +1016,33 @@ SWIGEXPORT jboolean JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_Mutu
 }
 
 
+SWIGEXPORT jboolean JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_MutualCalibration_1tryAddingVanishingPointImage(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2, jlong jarg3) {
+  jboolean jresult = 0 ;
+  MutualCalibration *arg1 = (MutualCalibration *) 0 ;
+  cv::Mat *arg2 = 0 ;
+  cv::Mat *arg3 = 0 ;
+  bool result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(MutualCalibration **)&jarg1; 
+  arg2 = *(cv::Mat **)&jarg2;
+  if (!arg2) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "cv::Mat & reference is null");
+    return 0;
+  } 
+  arg3 = *(cv::Mat **)&jarg3;
+  if (!arg3) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "cv::Mat & reference is null");
+    return 0;
+  } 
+  result = (bool)(arg1)->tryAddingVanishingPointImage(*arg2,*arg3);
+  jresult = (jboolean)result; 
+  return jresult;
+}
+
+
 SWIGEXPORT void JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_MutualCalibration_1addFullIMURotationByQuaternion(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jdouble jarg2, jdouble jarg3, jdouble jarg4) {
   MutualCalibration *arg1 = (MutualCalibration *) 0 ;
   double arg2 ;

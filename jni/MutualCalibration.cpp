@@ -128,10 +128,14 @@ MutualCalibration::tryAddingChessboardImage(cv::Mat & inputImage, cv::Mat & outp
 }
 
 bool
-MutualCalibration::tryAddingChessboardImage(cv::Mat & inputImage, cv::Mat & outputImage)
+MutualCalibration::tryAddingVanishingPointImage(cv::Mat & inputImage, cv::Mat & outputImage)
 {
-	VanishingPoint vanishingPoint(inputImage); 
+	__android_log_print(
+			ANDROID_LOG_INFO, "vp", "here"); 
+	Cas1DVanishingPoint vanishingPoint(inputImage); 
 	vanishingPoint.findOrthogonalVanishingPts(); 
+	__android_log_print(
+			ANDROID_LOG_INFO, "vp", "here"); 
 	vanishingPoint.getSketch().copyTo(outputImage); 
 	return vanishingPoint.threeDetected(); 
 }

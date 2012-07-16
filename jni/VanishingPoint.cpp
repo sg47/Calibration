@@ -7,13 +7,16 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <fstream>
 
+#include <android/log.h>
+
+
 Cas1DVanishingPoint::Cas1DVanishingPoint(const cv::Mat & image)
 {
 	if (image.channels() > 1)	
 		cv::cvtColor(image, mImage, CV_BGR2GRAY); 
-	else image.copyTo(image, mImage); 
+	else image.copyTo(mImage); 
 	cv::cvtColor(mImage, mSketch, CV_GRAY2BGR); 
-	
+
 	mInteriorRadius = hypot(mImage.cols / 2, mImage.rows / 2); 
 
 	detectLines(); 
@@ -24,7 +27,7 @@ Cas1DVanishingPoint::Cas1DVanishingPoint(const cv::Mat & image)
 		mLines[i][2] -= mImage.cols / 2; 
 		mLines[i][3] -= mImage.rows / 2; 
 	}
-	showLines(mLines); 
+//	showLines(mLines); 
 }
 
 bool 
@@ -59,13 +62,17 @@ Cas1DVanishingPoint::getVanishingPts() const
 cv::Mat 
 Cas1DVanishingPoint::getSketch() const
 {
+	cv::Mat m; 
 	mSketch.copyTo(m); 
-	for (size_t i = 0; i < vanishingPts.size(); i++)
+	if (threeDetected())
 	{
-		cv::Point2f v; 
-		v = vanishingPts[i];  
-		cv::line(m, cv::Point(m.cols/2, m.rows/2), 
-				cv::Point(v.x + m.cols/2, v.y + m.rows/2), cv::Scalar(255, 255, 0), 3, 8);
+		for (size_t i = 0; i < mVanishingPts.size(); i++)
+		{
+			cv::Point2f v; 
+			v = mVanishingPts[i];  
+			cv::line(m, cv::Point(m.cols/2, m.rows/2), 
+					cv::Point(v.x + m.cols/2, v.y + m.rows/2), cv::Scalar(255, 255, 0), 3, 8);
+		}
 	}
 	return m * 1.0; 
 }
@@ -115,14 +122,14 @@ Cas1DVanishingPoint::detectLines()
 	float min_length = 30.0f / 800 * hypot(mImage.cols, mImage.rows); 
 	int min_vote = 80.0 / 800 * hypot(mImage.cols, mImage.rows); 
 	int blurRadius = 1.5 / 800 * hypot(mImage.cols, mImage.rows); 
-	std::cout << blurRadius << std::endl; 
+//	std::cout << blurRadius << std::endl; 
 	cv::Mat blured; 
 	cv::GaussianBlur(mImage, blured, cv::Size(2 * blurRadius + 1, 2 * blurRadius + 1), blurRadius); 
 	cv::Mat edge; 
 	cv::Canny(blured, edge, 50, 100, 3); 
-	cv::namedWindow("edge"); 
+/*	cv::namedWindow("edge"); 
 	cv::imshow("edge", blured); 
-	cv::waitKey(); 
+	cv::waitKey(); */
 	cv::HoughLinesP(edge, mLines, 1, CV_PI/180, min_vote, min_length, 10);
 	std::cout << mLines.size() << " lines detected. " << std::endl; 
 /*	for (size_t i = 0; i < mLines.size(); i++)
