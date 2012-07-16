@@ -35,49 +35,64 @@ public class MutualCalibration {
     }
   }
 
-  public void setRotationTest(SWIGTYPE_p_std__vectorT_double_t value) {
-    CalibrationJNI.MutualCalibration_rotationTest_set(swigCPtr, this, SWIGTYPE_p_std__vectorT_double_t.getCPtr(value));
+  public MutualCalibration(long heightImage, long widthImage, long heightBoard, long widthBoard, boolean useOpenCVCorner, boolean useOpenCVCalibration, boolean useOnlyIMUGravity, boolean useChessboardHorizontal, boolean useRANSAC) {
+    this(CalibrationJNI.new_MutualCalibration__SWIG_0(heightImage, widthImage, heightBoard, widthBoard, useOpenCVCorner, useOpenCVCalibration, useOnlyIMUGravity, useChessboardHorizontal, useRANSAC), true);
   }
 
-  public SWIGTYPE_p_std__vectorT_double_t getRotationTest() {
-    return new SWIGTYPE_p_std__vectorT_double_t(CalibrationJNI.MutualCalibration_rotationTest_get(swigCPtr, this), true);
+  public MutualCalibration(long heightImage, long widthImage, long heightBoard, long widthBoard, boolean useOpenCVCorner, boolean useOpenCVCalibration, boolean useOnlyIMUGravity, boolean useChessboardHorizontal) {
+    this(CalibrationJNI.new_MutualCalibration__SWIG_1(heightImage, widthImage, heightBoard, widthBoard, useOpenCVCorner, useOpenCVCalibration, useOnlyIMUGravity, useChessboardHorizontal), true);
   }
 
-  public void setPRotationTest(SWIGTYPE_p_double value) {
-    CalibrationJNI.MutualCalibration_pRotationTest_set(swigCPtr, this, SWIGTYPE_p_double.getCPtr(value));
-  }
-
-  public SWIGTYPE_p_double getPRotationTest() {
-    long cPtr = CalibrationJNI.MutualCalibration_pRotationTest_get(swigCPtr, this);
-    return (cPtr == 0) ? null : new SWIGTYPE_p_double(cPtr, false);
+  public MutualCalibration(long heightImage, long widthImage, long heightBoard, long widthBoard, boolean useOpenCVCorner, boolean useOpenCVCalibration, boolean useOnlyIMUGravity) {
+    this(CalibrationJNI.new_MutualCalibration__SWIG_2(heightImage, widthImage, heightBoard, widthBoard, useOpenCVCorner, useOpenCVCalibration, useOnlyIMUGravity), true);
   }
 
   public MutualCalibration(long heightImage, long widthImage, long heightBoard, long widthBoard, boolean useOpenCVCorner, boolean useOpenCVCalibration) {
-    this(CalibrationJNI.new_MutualCalibration__SWIG_0(heightImage, widthImage, heightBoard, widthBoard, useOpenCVCorner, useOpenCVCalibration), true);
+    this(CalibrationJNI.new_MutualCalibration__SWIG_3(heightImage, widthImage, heightBoard, widthBoard, useOpenCVCorner, useOpenCVCalibration), true);
   }
 
   public MutualCalibration(long heightImage, long widthImage, long heightBoard, long widthBoard, boolean useOpenCVCorner) {
-    this(CalibrationJNI.new_MutualCalibration__SWIG_1(heightImage, widthImage, heightBoard, widthBoard, useOpenCVCorner), true);
+    this(CalibrationJNI.new_MutualCalibration__SWIG_4(heightImage, widthImage, heightBoard, widthBoard, useOpenCVCorner), true);
   }
 
   public MutualCalibration(long heightImage, long widthImage, long heightBoard, long widthBoard) {
-    this(CalibrationJNI.new_MutualCalibration__SWIG_2(heightImage, widthImage, heightBoard, widthBoard), true);
+    this(CalibrationJNI.new_MutualCalibration__SWIG_5(heightImage, widthImage, heightBoard, widthBoard), true);
   }
 
   public boolean tryAddingChessboardImage(long inputImage, long outputImage) {
-    return CalibrationJNI.MutualCalibration_tryAddingChessboardImage(swigCPtr, this,  inputImage,  outputImage);
+    return CalibrationJNI.MutualCalibration_tryAddingChessboardImage(swigCPtr, this, (inputImage), (outputImage));
   }
 
-  public void addIMUData(double r0, double r1, double r2) {
-    CalibrationJNI.MutualCalibration_addIMUData(swigCPtr, this, r0, r1, r2);
+  public void addFullIMURotationByQuaternion(double r0, double r1, double r2) {
+    CalibrationJNI.MutualCalibration_addFullIMURotationByQuaternion(swigCPtr, this, r0, r1, r2);
+  }
+
+  public void addIMUGravityVector(double g1, double g2, double g3) {
+    CalibrationJNI.MutualCalibration_addIMUGravityVector(swigCPtr, this, g1, g2, g3);
   }
 
   public long getNumberOfImages() {
     return CalibrationJNI.MutualCalibration_getNumberOfImages(swigCPtr, this);
   }
 
+  public void getRotationMatrix(double[] p) {
+    CalibrationJNI.MutualCalibration_getRotationMatrix(swigCPtr, this, p);
+  }
+
+  public SWIGTYPE_p_std__vectorT_size_t_t randPerm(long n) {
+    return new SWIGTYPE_p_std__vectorT_size_t_t(CalibrationJNI.MutualCalibration_randPerm(swigCPtr, this, n), true);
+  }
+
   public void calibrateCamera() {
     CalibrationJNI.MutualCalibration_calibrateCamera(swigCPtr, this);
+  }
+
+  public void ransacMutualCalibrateWithHorizontalChessboard() {
+    CalibrationJNI.MutualCalibration_ransacMutualCalibrateWithHorizontalChessboard(swigCPtr, this);
+  }
+
+  public void lsMutualCalibrateWithHorizontalChessboard() {
+    CalibrationJNI.MutualCalibration_lsMutualCalibrateWithHorizontalChessboard(swigCPtr, this);
   }
 
   public void mutualCalibrate() {

@@ -214,73 +214,716 @@ static void SWIGUNUSED SWIG_JavaThrowException(JNIEnv *jenv, SWIG_JavaExceptionC
 #include "MutualCalibration.h"
 
 
+#if defined(SWIG_NOINCLUDE) || defined(SWIG_NOARRAYS)
+
+
+int SWIG_JavaArrayInBool (JNIEnv *jenv, jboolean **jarr, bool **carr, jbooleanArray input);
+void SWIG_JavaArrayArgoutBool (JNIEnv *jenv, jboolean *jarr, bool *carr, jbooleanArray input);
+jbooleanArray SWIG_JavaArrayOutBool (JNIEnv *jenv, bool *result, jsize sz);
+
+
+int SWIG_JavaArrayInSchar (JNIEnv *jenv, jbyte **jarr, signed char **carr, jbyteArray input);
+void SWIG_JavaArrayArgoutSchar (JNIEnv *jenv, jbyte *jarr, signed char *carr, jbyteArray input);
+jbyteArray SWIG_JavaArrayOutSchar (JNIEnv *jenv, signed char *result, jsize sz);
+
+
+int SWIG_JavaArrayInUchar (JNIEnv *jenv, jshort **jarr, unsigned char **carr, jshortArray input);
+void SWIG_JavaArrayArgoutUchar (JNIEnv *jenv, jshort *jarr, unsigned char *carr, jshortArray input);
+jshortArray SWIG_JavaArrayOutUchar (JNIEnv *jenv, unsigned char *result, jsize sz);
+
+
+int SWIG_JavaArrayInShort (JNIEnv *jenv, jshort **jarr, short **carr, jshortArray input);
+void SWIG_JavaArrayArgoutShort (JNIEnv *jenv, jshort *jarr, short *carr, jshortArray input);
+jshortArray SWIG_JavaArrayOutShort (JNIEnv *jenv, short *result, jsize sz);
+
+
+int SWIG_JavaArrayInUshort (JNIEnv *jenv, jint **jarr, unsigned short **carr, jintArray input);
+void SWIG_JavaArrayArgoutUshort (JNIEnv *jenv, jint *jarr, unsigned short *carr, jintArray input);
+jintArray SWIG_JavaArrayOutUshort (JNIEnv *jenv, unsigned short *result, jsize sz);
+
+
+int SWIG_JavaArrayInInt (JNIEnv *jenv, jint **jarr, int **carr, jintArray input);
+void SWIG_JavaArrayArgoutInt (JNIEnv *jenv, jint *jarr, int *carr, jintArray input);
+jintArray SWIG_JavaArrayOutInt (JNIEnv *jenv, int *result, jsize sz);
+
+
+int SWIG_JavaArrayInUint (JNIEnv *jenv, jlong **jarr, unsigned int **carr, jlongArray input);
+void SWIG_JavaArrayArgoutUint (JNIEnv *jenv, jlong *jarr, unsigned int *carr, jlongArray input);
+jlongArray SWIG_JavaArrayOutUint (JNIEnv *jenv, unsigned int *result, jsize sz);
+
+
+int SWIG_JavaArrayInLong (JNIEnv *jenv, jint **jarr, long **carr, jintArray input);
+void SWIG_JavaArrayArgoutLong (JNIEnv *jenv, jint *jarr, long *carr, jintArray input);
+jintArray SWIG_JavaArrayOutLong (JNIEnv *jenv, long *result, jsize sz);
+
+
+int SWIG_JavaArrayInUlong (JNIEnv *jenv, jlong **jarr, unsigned long **carr, jlongArray input);
+void SWIG_JavaArrayArgoutUlong (JNIEnv *jenv, jlong *jarr, unsigned long *carr, jlongArray input);
+jlongArray SWIG_JavaArrayOutUlong (JNIEnv *jenv, unsigned long *result, jsize sz);
+
+
+int SWIG_JavaArrayInLonglong (JNIEnv *jenv, jlong **jarr, jlong **carr, jlongArray input);
+void SWIG_JavaArrayArgoutLonglong (JNIEnv *jenv, jlong *jarr, jlong *carr, jlongArray input);
+jlongArray SWIG_JavaArrayOutLonglong (JNIEnv *jenv, jlong *result, jsize sz);
+
+
+int SWIG_JavaArrayInFloat (JNIEnv *jenv, jfloat **jarr, float **carr, jfloatArray input);
+void SWIG_JavaArrayArgoutFloat (JNIEnv *jenv, jfloat *jarr, float *carr, jfloatArray input);
+jfloatArray SWIG_JavaArrayOutFloat (JNIEnv *jenv, float *result, jsize sz);
+
+
+int SWIG_JavaArrayInDouble (JNIEnv *jenv, jdouble **jarr, double **carr, jdoubleArray input);
+void SWIG_JavaArrayArgoutDouble (JNIEnv *jenv, jdouble *jarr, double *carr, jdoubleArray input);
+jdoubleArray SWIG_JavaArrayOutDouble (JNIEnv *jenv, double *result, jsize sz);
+
+
+#else
+
+
+/* bool[] support */
+int SWIG_JavaArrayInBool (JNIEnv *jenv, jboolean **jarr, bool **carr, jbooleanArray input) {
+  int i;
+  jsize sz;
+  if (!input) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "null array");
+    return 0;
+  }
+  sz = jenv->GetArrayLength(input);
+  *jarr = jenv->GetBooleanArrayElements(input, 0);
+  if (!*jarr)
+    return 0; 
+  *carr = new bool[sz]; 
+  if (!*carr) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaOutOfMemoryError, "array memory allocation failed");
+    return 0;
+  }
+  for (i=0; i<sz; i++)
+    (*carr)[i] = ((*jarr)[i] != 0);
+  return 1;
+}
+
+void SWIG_JavaArrayArgoutBool (JNIEnv *jenv, jboolean *jarr, bool *carr, jbooleanArray input) {
+  int i;
+  jsize sz = jenv->GetArrayLength(input);
+  for (i=0; i<sz; i++)
+    jarr[i] = (jboolean)carr[i];
+  jenv->ReleaseBooleanArrayElements(input, jarr, 0);
+}
+
+jbooleanArray SWIG_JavaArrayOutBool (JNIEnv *jenv, bool *result, jsize sz) {
+  jboolean *arr;
+  int i;
+  jbooleanArray jresult = jenv->NewBooleanArray(sz);
+  if (!jresult)
+    return NULL;
+  arr = jenv->GetBooleanArrayElements(jresult, 0);
+  if (!arr)
+    return NULL;
+  for (i=0; i<sz; i++)
+    arr[i] = (jboolean)result[i];
+  jenv->ReleaseBooleanArrayElements(jresult, arr, 0);
+  return jresult;
+}
+
+
+/* signed char[] support */
+int SWIG_JavaArrayInSchar (JNIEnv *jenv, jbyte **jarr, signed char **carr, jbyteArray input) {
+  int i;
+  jsize sz;
+  if (!input) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "null array");
+    return 0;
+  }
+  sz = jenv->GetArrayLength(input);
+  *jarr = jenv->GetByteArrayElements(input, 0);
+  if (!*jarr)
+    return 0; 
+  *carr = new signed char[sz]; 
+  if (!*carr) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaOutOfMemoryError, "array memory allocation failed");
+    return 0;
+  }
+  for (i=0; i<sz; i++)
+    (*carr)[i] = (signed char)(*jarr)[i];
+  return 1;
+}
+
+void SWIG_JavaArrayArgoutSchar (JNIEnv *jenv, jbyte *jarr, signed char *carr, jbyteArray input) {
+  int i;
+  jsize sz = jenv->GetArrayLength(input);
+  for (i=0; i<sz; i++)
+    jarr[i] = (jbyte)carr[i];
+  jenv->ReleaseByteArrayElements(input, jarr, 0);
+}
+
+jbyteArray SWIG_JavaArrayOutSchar (JNIEnv *jenv, signed char *result, jsize sz) {
+  jbyte *arr;
+  int i;
+  jbyteArray jresult = jenv->NewByteArray(sz);
+  if (!jresult)
+    return NULL;
+  arr = jenv->GetByteArrayElements(jresult, 0);
+  if (!arr)
+    return NULL;
+  for (i=0; i<sz; i++)
+    arr[i] = (jbyte)result[i];
+  jenv->ReleaseByteArrayElements(jresult, arr, 0);
+  return jresult;
+}
+
+
+/* unsigned char[] support */
+int SWIG_JavaArrayInUchar (JNIEnv *jenv, jshort **jarr, unsigned char **carr, jshortArray input) {
+  int i;
+  jsize sz;
+  if (!input) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "null array");
+    return 0;
+  }
+  sz = jenv->GetArrayLength(input);
+  *jarr = jenv->GetShortArrayElements(input, 0);
+  if (!*jarr)
+    return 0; 
+  *carr = new unsigned char[sz]; 
+  if (!*carr) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaOutOfMemoryError, "array memory allocation failed");
+    return 0;
+  }
+  for (i=0; i<sz; i++)
+    (*carr)[i] = (unsigned char)(*jarr)[i];
+  return 1;
+}
+
+void SWIG_JavaArrayArgoutUchar (JNIEnv *jenv, jshort *jarr, unsigned char *carr, jshortArray input) {
+  int i;
+  jsize sz = jenv->GetArrayLength(input);
+  for (i=0; i<sz; i++)
+    jarr[i] = (jshort)carr[i];
+  jenv->ReleaseShortArrayElements(input, jarr, 0);
+}
+
+jshortArray SWIG_JavaArrayOutUchar (JNIEnv *jenv, unsigned char *result, jsize sz) {
+  jshort *arr;
+  int i;
+  jshortArray jresult = jenv->NewShortArray(sz);
+  if (!jresult)
+    return NULL;
+  arr = jenv->GetShortArrayElements(jresult, 0);
+  if (!arr)
+    return NULL;
+  for (i=0; i<sz; i++)
+    arr[i] = (jshort)result[i];
+  jenv->ReleaseShortArrayElements(jresult, arr, 0);
+  return jresult;
+}
+
+
+/* short[] support */
+int SWIG_JavaArrayInShort (JNIEnv *jenv, jshort **jarr, short **carr, jshortArray input) {
+  int i;
+  jsize sz;
+  if (!input) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "null array");
+    return 0;
+  }
+  sz = jenv->GetArrayLength(input);
+  *jarr = jenv->GetShortArrayElements(input, 0);
+  if (!*jarr)
+    return 0; 
+  *carr = new short[sz]; 
+  if (!*carr) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaOutOfMemoryError, "array memory allocation failed");
+    return 0;
+  }
+  for (i=0; i<sz; i++)
+    (*carr)[i] = (short)(*jarr)[i];
+  return 1;
+}
+
+void SWIG_JavaArrayArgoutShort (JNIEnv *jenv, jshort *jarr, short *carr, jshortArray input) {
+  int i;
+  jsize sz = jenv->GetArrayLength(input);
+  for (i=0; i<sz; i++)
+    jarr[i] = (jshort)carr[i];
+  jenv->ReleaseShortArrayElements(input, jarr, 0);
+}
+
+jshortArray SWIG_JavaArrayOutShort (JNIEnv *jenv, short *result, jsize sz) {
+  jshort *arr;
+  int i;
+  jshortArray jresult = jenv->NewShortArray(sz);
+  if (!jresult)
+    return NULL;
+  arr = jenv->GetShortArrayElements(jresult, 0);
+  if (!arr)
+    return NULL;
+  for (i=0; i<sz; i++)
+    arr[i] = (jshort)result[i];
+  jenv->ReleaseShortArrayElements(jresult, arr, 0);
+  return jresult;
+}
+
+
+/* unsigned short[] support */
+int SWIG_JavaArrayInUshort (JNIEnv *jenv, jint **jarr, unsigned short **carr, jintArray input) {
+  int i;
+  jsize sz;
+  if (!input) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "null array");
+    return 0;
+  }
+  sz = jenv->GetArrayLength(input);
+  *jarr = jenv->GetIntArrayElements(input, 0);
+  if (!*jarr)
+    return 0; 
+  *carr = new unsigned short[sz]; 
+  if (!*carr) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaOutOfMemoryError, "array memory allocation failed");
+    return 0;
+  }
+  for (i=0; i<sz; i++)
+    (*carr)[i] = (unsigned short)(*jarr)[i];
+  return 1;
+}
+
+void SWIG_JavaArrayArgoutUshort (JNIEnv *jenv, jint *jarr, unsigned short *carr, jintArray input) {
+  int i;
+  jsize sz = jenv->GetArrayLength(input);
+  for (i=0; i<sz; i++)
+    jarr[i] = (jint)carr[i];
+  jenv->ReleaseIntArrayElements(input, jarr, 0);
+}
+
+jintArray SWIG_JavaArrayOutUshort (JNIEnv *jenv, unsigned short *result, jsize sz) {
+  jint *arr;
+  int i;
+  jintArray jresult = jenv->NewIntArray(sz);
+  if (!jresult)
+    return NULL;
+  arr = jenv->GetIntArrayElements(jresult, 0);
+  if (!arr)
+    return NULL;
+  for (i=0; i<sz; i++)
+    arr[i] = (jint)result[i];
+  jenv->ReleaseIntArrayElements(jresult, arr, 0);
+  return jresult;
+}
+
+
+/* int[] support */
+int SWIG_JavaArrayInInt (JNIEnv *jenv, jint **jarr, int **carr, jintArray input) {
+  int i;
+  jsize sz;
+  if (!input) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "null array");
+    return 0;
+  }
+  sz = jenv->GetArrayLength(input);
+  *jarr = jenv->GetIntArrayElements(input, 0);
+  if (!*jarr)
+    return 0; 
+  *carr = new int[sz]; 
+  if (!*carr) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaOutOfMemoryError, "array memory allocation failed");
+    return 0;
+  }
+  for (i=0; i<sz; i++)
+    (*carr)[i] = (int)(*jarr)[i];
+  return 1;
+}
+
+void SWIG_JavaArrayArgoutInt (JNIEnv *jenv, jint *jarr, int *carr, jintArray input) {
+  int i;
+  jsize sz = jenv->GetArrayLength(input);
+  for (i=0; i<sz; i++)
+    jarr[i] = (jint)carr[i];
+  jenv->ReleaseIntArrayElements(input, jarr, 0);
+}
+
+jintArray SWIG_JavaArrayOutInt (JNIEnv *jenv, int *result, jsize sz) {
+  jint *arr;
+  int i;
+  jintArray jresult = jenv->NewIntArray(sz);
+  if (!jresult)
+    return NULL;
+  arr = jenv->GetIntArrayElements(jresult, 0);
+  if (!arr)
+    return NULL;
+  for (i=0; i<sz; i++)
+    arr[i] = (jint)result[i];
+  jenv->ReleaseIntArrayElements(jresult, arr, 0);
+  return jresult;
+}
+
+
+/* unsigned int[] support */
+int SWIG_JavaArrayInUint (JNIEnv *jenv, jlong **jarr, unsigned int **carr, jlongArray input) {
+  int i;
+  jsize sz;
+  if (!input) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "null array");
+    return 0;
+  }
+  sz = jenv->GetArrayLength(input);
+  *jarr = jenv->GetLongArrayElements(input, 0);
+  if (!*jarr)
+    return 0; 
+  *carr = new unsigned int[sz]; 
+  if (!*carr) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaOutOfMemoryError, "array memory allocation failed");
+    return 0;
+  }
+  for (i=0; i<sz; i++)
+    (*carr)[i] = (unsigned int)(*jarr)[i];
+  return 1;
+}
+
+void SWIG_JavaArrayArgoutUint (JNIEnv *jenv, jlong *jarr, unsigned int *carr, jlongArray input) {
+  int i;
+  jsize sz = jenv->GetArrayLength(input);
+  for (i=0; i<sz; i++)
+    jarr[i] = (jlong)carr[i];
+  jenv->ReleaseLongArrayElements(input, jarr, 0);
+}
+
+jlongArray SWIG_JavaArrayOutUint (JNIEnv *jenv, unsigned int *result, jsize sz) {
+  jlong *arr;
+  int i;
+  jlongArray jresult = jenv->NewLongArray(sz);
+  if (!jresult)
+    return NULL;
+  arr = jenv->GetLongArrayElements(jresult, 0);
+  if (!arr)
+    return NULL;
+  for (i=0; i<sz; i++)
+    arr[i] = (jlong)result[i];
+  jenv->ReleaseLongArrayElements(jresult, arr, 0);
+  return jresult;
+}
+
+
+/* long[] support */
+int SWIG_JavaArrayInLong (JNIEnv *jenv, jint **jarr, long **carr, jintArray input) {
+  int i;
+  jsize sz;
+  if (!input) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "null array");
+    return 0;
+  }
+  sz = jenv->GetArrayLength(input);
+  *jarr = jenv->GetIntArrayElements(input, 0);
+  if (!*jarr)
+    return 0; 
+  *carr = new long[sz]; 
+  if (!*carr) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaOutOfMemoryError, "array memory allocation failed");
+    return 0;
+  }
+  for (i=0; i<sz; i++)
+    (*carr)[i] = (long)(*jarr)[i];
+  return 1;
+}
+
+void SWIG_JavaArrayArgoutLong (JNIEnv *jenv, jint *jarr, long *carr, jintArray input) {
+  int i;
+  jsize sz = jenv->GetArrayLength(input);
+  for (i=0; i<sz; i++)
+    jarr[i] = (jint)carr[i];
+  jenv->ReleaseIntArrayElements(input, jarr, 0);
+}
+
+jintArray SWIG_JavaArrayOutLong (JNIEnv *jenv, long *result, jsize sz) {
+  jint *arr;
+  int i;
+  jintArray jresult = jenv->NewIntArray(sz);
+  if (!jresult)
+    return NULL;
+  arr = jenv->GetIntArrayElements(jresult, 0);
+  if (!arr)
+    return NULL;
+  for (i=0; i<sz; i++)
+    arr[i] = (jint)result[i];
+  jenv->ReleaseIntArrayElements(jresult, arr, 0);
+  return jresult;
+}
+
+
+/* unsigned long[] support */
+int SWIG_JavaArrayInUlong (JNIEnv *jenv, jlong **jarr, unsigned long **carr, jlongArray input) {
+  int i;
+  jsize sz;
+  if (!input) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "null array");
+    return 0;
+  }
+  sz = jenv->GetArrayLength(input);
+  *jarr = jenv->GetLongArrayElements(input, 0);
+  if (!*jarr)
+    return 0; 
+  *carr = new unsigned long[sz]; 
+  if (!*carr) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaOutOfMemoryError, "array memory allocation failed");
+    return 0;
+  }
+  for (i=0; i<sz; i++)
+    (*carr)[i] = (unsigned long)(*jarr)[i];
+  return 1;
+}
+
+void SWIG_JavaArrayArgoutUlong (JNIEnv *jenv, jlong *jarr, unsigned long *carr, jlongArray input) {
+  int i;
+  jsize sz = jenv->GetArrayLength(input);
+  for (i=0; i<sz; i++)
+    jarr[i] = (jlong)carr[i];
+  jenv->ReleaseLongArrayElements(input, jarr, 0);
+}
+
+jlongArray SWIG_JavaArrayOutUlong (JNIEnv *jenv, unsigned long *result, jsize sz) {
+  jlong *arr;
+  int i;
+  jlongArray jresult = jenv->NewLongArray(sz);
+  if (!jresult)
+    return NULL;
+  arr = jenv->GetLongArrayElements(jresult, 0);
+  if (!arr)
+    return NULL;
+  for (i=0; i<sz; i++)
+    arr[i] = (jlong)result[i];
+  jenv->ReleaseLongArrayElements(jresult, arr, 0);
+  return jresult;
+}
+
+
+/* jlong[] support */
+int SWIG_JavaArrayInLonglong (JNIEnv *jenv, jlong **jarr, jlong **carr, jlongArray input) {
+  int i;
+  jsize sz;
+  if (!input) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "null array");
+    return 0;
+  }
+  sz = jenv->GetArrayLength(input);
+  *jarr = jenv->GetLongArrayElements(input, 0);
+  if (!*jarr)
+    return 0; 
+  *carr = new jlong[sz]; 
+  if (!*carr) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaOutOfMemoryError, "array memory allocation failed");
+    return 0;
+  }
+  for (i=0; i<sz; i++)
+    (*carr)[i] = (jlong)(*jarr)[i];
+  return 1;
+}
+
+void SWIG_JavaArrayArgoutLonglong (JNIEnv *jenv, jlong *jarr, jlong *carr, jlongArray input) {
+  int i;
+  jsize sz = jenv->GetArrayLength(input);
+  for (i=0; i<sz; i++)
+    jarr[i] = (jlong)carr[i];
+  jenv->ReleaseLongArrayElements(input, jarr, 0);
+}
+
+jlongArray SWIG_JavaArrayOutLonglong (JNIEnv *jenv, jlong *result, jsize sz) {
+  jlong *arr;
+  int i;
+  jlongArray jresult = jenv->NewLongArray(sz);
+  if (!jresult)
+    return NULL;
+  arr = jenv->GetLongArrayElements(jresult, 0);
+  if (!arr)
+    return NULL;
+  for (i=0; i<sz; i++)
+    arr[i] = (jlong)result[i];
+  jenv->ReleaseLongArrayElements(jresult, arr, 0);
+  return jresult;
+}
+
+
+/* float[] support */
+int SWIG_JavaArrayInFloat (JNIEnv *jenv, jfloat **jarr, float **carr, jfloatArray input) {
+  int i;
+  jsize sz;
+  if (!input) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "null array");
+    return 0;
+  }
+  sz = jenv->GetArrayLength(input);
+  *jarr = jenv->GetFloatArrayElements(input, 0);
+  if (!*jarr)
+    return 0; 
+  *carr = new float[sz]; 
+  if (!*carr) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaOutOfMemoryError, "array memory allocation failed");
+    return 0;
+  }
+  for (i=0; i<sz; i++)
+    (*carr)[i] = (float)(*jarr)[i];
+  return 1;
+}
+
+void SWIG_JavaArrayArgoutFloat (JNIEnv *jenv, jfloat *jarr, float *carr, jfloatArray input) {
+  int i;
+  jsize sz = jenv->GetArrayLength(input);
+  for (i=0; i<sz; i++)
+    jarr[i] = (jfloat)carr[i];
+  jenv->ReleaseFloatArrayElements(input, jarr, 0);
+}
+
+jfloatArray SWIG_JavaArrayOutFloat (JNIEnv *jenv, float *result, jsize sz) {
+  jfloat *arr;
+  int i;
+  jfloatArray jresult = jenv->NewFloatArray(sz);
+  if (!jresult)
+    return NULL;
+  arr = jenv->GetFloatArrayElements(jresult, 0);
+  if (!arr)
+    return NULL;
+  for (i=0; i<sz; i++)
+    arr[i] = (jfloat)result[i];
+  jenv->ReleaseFloatArrayElements(jresult, arr, 0);
+  return jresult;
+}
+
+
+/* double[] support */
+int SWIG_JavaArrayInDouble (JNIEnv *jenv, jdouble **jarr, double **carr, jdoubleArray input) {
+  int i;
+  jsize sz;
+  if (!input) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "null array");
+    return 0;
+  }
+  sz = jenv->GetArrayLength(input);
+  *jarr = jenv->GetDoubleArrayElements(input, 0);
+  if (!*jarr)
+    return 0; 
+  *carr = new double[sz]; 
+  if (!*carr) {
+    SWIG_JavaThrowException(jenv, SWIG_JavaOutOfMemoryError, "array memory allocation failed");
+    return 0;
+  }
+  for (i=0; i<sz; i++)
+    (*carr)[i] = (double)(*jarr)[i];
+  return 1;
+}
+
+void SWIG_JavaArrayArgoutDouble (JNIEnv *jenv, jdouble *jarr, double *carr, jdoubleArray input) {
+  int i;
+  jsize sz = jenv->GetArrayLength(input);
+  for (i=0; i<sz; i++)
+    jarr[i] = (jdouble)carr[i];
+  jenv->ReleaseDoubleArrayElements(input, jarr, 0);
+}
+
+jdoubleArray SWIG_JavaArrayOutDouble (JNIEnv *jenv, double *result, jsize sz) {
+  jdouble *arr;
+  int i;
+  jdoubleArray jresult = jenv->NewDoubleArray(sz);
+  if (!jresult)
+    return NULL;
+  arr = jenv->GetDoubleArrayElements(jresult, 0);
+  if (!arr)
+    return NULL;
+  for (i=0; i<sz; i++)
+    arr[i] = (jdouble)result[i];
+  jenv->ReleaseDoubleArrayElements(jresult, arr, 0);
+  return jresult;
+}
+
+
+#endif
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-SWIGEXPORT void JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_MutualCalibration_1rotationTest_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2) {
-  MutualCalibration *arg1 = (MutualCalibration *) 0 ;
-  std::vector< double > arg2 ;
-  std::vector< double > *argp2 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(MutualCalibration **)&jarg1; 
-  argp2 = *(std::vector< double > **)&jarg2; 
-  if (!argp2) {
-    SWIG_JavaThrowException(jenv, SWIG_JavaNullPointerException, "Attempt to dereference null std::vector< double >");
-    return ;
-  }
-  arg2 = *argp2; 
-  if (arg1) (arg1)->rotationTest = arg2;
-}
-
-
-SWIGEXPORT jlong JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_MutualCalibration_1rotationTest_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+SWIGEXPORT jlong JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_new_1MutualCalibration_1_1SWIG_10(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2, jlong jarg3, jlong jarg4, jboolean jarg5, jboolean jarg6, jboolean jarg7, jboolean jarg8, jboolean jarg9) {
   jlong jresult = 0 ;
-  MutualCalibration *arg1 = (MutualCalibration *) 0 ;
-  std::vector< double > result;
+  size_t arg1 ;
+  size_t arg2 ;
+  size_t arg3 ;
+  size_t arg4 ;
+  bool arg5 ;
+  bool arg6 ;
+  bool arg7 ;
+  bool arg8 ;
+  bool arg9 ;
+  MutualCalibration *result = 0 ;
   
   (void)jenv;
   (void)jcls;
-  (void)jarg1_;
-  arg1 = *(MutualCalibration **)&jarg1; 
-  result =  ((arg1)->rotationTest);
-  *(std::vector< double > **)&jresult = new std::vector< double >((const std::vector< double > &)result); 
+  arg1 = (size_t)jarg1; 
+  arg2 = (size_t)jarg2; 
+  arg3 = (size_t)jarg3; 
+  arg4 = (size_t)jarg4; 
+  arg5 = jarg5 ? true : false; 
+  arg6 = jarg6 ? true : false; 
+  arg7 = jarg7 ? true : false; 
+  arg8 = jarg8 ? true : false; 
+  arg9 = jarg9 ? true : false; 
+  result = (MutualCalibration *)new MutualCalibration(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9);
+  *(MutualCalibration **)&jresult = result; 
   return jresult;
 }
 
 
-SWIGEXPORT void JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_MutualCalibration_1pRotationTest_1set(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2) {
-  MutualCalibration *arg1 = (MutualCalibration *) 0 ;
-  double *arg2 = (double *) 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(MutualCalibration **)&jarg1; 
-  arg2 = *(double **)&jarg2; 
-  if (arg1) (arg1)->pRotationTest = arg2;
-}
-
-
-SWIGEXPORT jlong JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_MutualCalibration_1pRotationTest_1get(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+SWIGEXPORT jlong JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_new_1MutualCalibration_1_1SWIG_11(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2, jlong jarg3, jlong jarg4, jboolean jarg5, jboolean jarg6, jboolean jarg7, jboolean jarg8) {
   jlong jresult = 0 ;
-  MutualCalibration *arg1 = (MutualCalibration *) 0 ;
-  double *result = 0 ;
+  size_t arg1 ;
+  size_t arg2 ;
+  size_t arg3 ;
+  size_t arg4 ;
+  bool arg5 ;
+  bool arg6 ;
+  bool arg7 ;
+  bool arg8 ;
+  MutualCalibration *result = 0 ;
   
   (void)jenv;
   (void)jcls;
-  (void)jarg1_;
-  arg1 = *(MutualCalibration **)&jarg1; 
-  result = (double *) ((arg1)->pRotationTest);
-  *(double **)&jresult = result; 
+  arg1 = (size_t)jarg1; 
+  arg2 = (size_t)jarg2; 
+  arg3 = (size_t)jarg3; 
+  arg4 = (size_t)jarg4; 
+  arg5 = jarg5 ? true : false; 
+  arg6 = jarg6 ? true : false; 
+  arg7 = jarg7 ? true : false; 
+  arg8 = jarg8 ? true : false; 
+  result = (MutualCalibration *)new MutualCalibration(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8);
+  *(MutualCalibration **)&jresult = result; 
   return jresult;
 }
 
 
-SWIGEXPORT jlong JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_new_1MutualCalibration_1_1SWIG_10(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2, jlong jarg3, jlong jarg4, jboolean jarg5, jboolean jarg6) {
+SWIGEXPORT jlong JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_new_1MutualCalibration_1_1SWIG_12(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2, jlong jarg3, jlong jarg4, jboolean jarg5, jboolean jarg6, jboolean jarg7) {
+  jlong jresult = 0 ;
+  size_t arg1 ;
+  size_t arg2 ;
+  size_t arg3 ;
+  size_t arg4 ;
+  bool arg5 ;
+  bool arg6 ;
+  bool arg7 ;
+  MutualCalibration *result = 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  arg1 = (size_t)jarg1; 
+  arg2 = (size_t)jarg2; 
+  arg3 = (size_t)jarg3; 
+  arg4 = (size_t)jarg4; 
+  arg5 = jarg5 ? true : false; 
+  arg6 = jarg6 ? true : false; 
+  arg7 = jarg7 ? true : false; 
+  result = (MutualCalibration *)new MutualCalibration(arg1,arg2,arg3,arg4,arg5,arg6,arg7);
+  *(MutualCalibration **)&jresult = result; 
+  return jresult;
+}
+
+
+SWIGEXPORT jlong JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_new_1MutualCalibration_1_1SWIG_13(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2, jlong jarg3, jlong jarg4, jboolean jarg5, jboolean jarg6) {
   jlong jresult = 0 ;
   size_t arg1 ;
   size_t arg2 ;
@@ -304,7 +947,7 @@ SWIGEXPORT jlong JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_new_1Mu
 }
 
 
-SWIGEXPORT jlong JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_new_1MutualCalibration_1_1SWIG_11(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2, jlong jarg3, jlong jarg4, jboolean jarg5) {
+SWIGEXPORT jlong JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_new_1MutualCalibration_1_1SWIG_14(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2, jlong jarg3, jlong jarg4, jboolean jarg5) {
   jlong jresult = 0 ;
   size_t arg1 ;
   size_t arg2 ;
@@ -326,7 +969,7 @@ SWIGEXPORT jlong JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_new_1Mu
 }
 
 
-SWIGEXPORT jlong JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_new_1MutualCalibration_1_1SWIG_12(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2, jlong jarg3, jlong jarg4) {
+SWIGEXPORT jlong JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_new_1MutualCalibration_1_1SWIG_15(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2, jlong jarg3, jlong jarg4) {
   jlong jresult = 0 ;
   size_t arg1 ;
   size_t arg2 ;
@@ -373,7 +1016,7 @@ SWIGEXPORT jboolean JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_Mutu
 }
 
 
-SWIGEXPORT void JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_MutualCalibration_1addIMUData(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jdouble jarg2, jdouble jarg3, jdouble jarg4) {
+SWIGEXPORT void JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_MutualCalibration_1addFullIMURotationByQuaternion(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jdouble jarg2, jdouble jarg3, jdouble jarg4) {
   MutualCalibration *arg1 = (MutualCalibration *) 0 ;
   double arg2 ;
   double arg3 ;
@@ -386,7 +1029,24 @@ SWIGEXPORT void JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_MutualCa
   arg2 = (double)jarg2; 
   arg3 = (double)jarg3; 
   arg4 = (double)jarg4; 
-  (arg1)->addIMUData(arg2,arg3,arg4);
+  (arg1)->addFullIMURotationByQuaternion(arg2,arg3,arg4);
+}
+
+
+SWIGEXPORT void JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_MutualCalibration_1addIMUGravityVector(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jdouble jarg2, jdouble jarg3, jdouble jarg4) {
+  MutualCalibration *arg1 = (MutualCalibration *) 0 ;
+  double arg2 ;
+  double arg3 ;
+  double arg4 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(MutualCalibration **)&jarg1; 
+  arg2 = (double)jarg2; 
+  arg3 = (double)jarg3; 
+  arg4 = (double)jarg4; 
+  (arg1)->addIMUGravityVector(arg2,arg3,arg4);
 }
 
 
@@ -405,6 +1065,39 @@ SWIGEXPORT jlong JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_MutualC
 }
 
 
+SWIGEXPORT void JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_MutualCalibration_1getRotationMatrix(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jdoubleArray jarg2) {
+  MutualCalibration *arg1 = (MutualCalibration *) 0 ;
+  double *arg2 ;
+  jdouble *jarr2 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(MutualCalibration **)&jarg1; 
+  if (!SWIG_JavaArrayInDouble(jenv, &jarr2, &arg2, jarg2)) return ; 
+  ((MutualCalibration const *)arg1)->getRotationMatrix(arg2);
+  SWIG_JavaArrayArgoutDouble(jenv, jarr2, arg2, jarg2); 
+  delete [] arg2; 
+}
+
+
+SWIGEXPORT jlong JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_MutualCalibration_1randPerm(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2) {
+  jlong jresult = 0 ;
+  MutualCalibration *arg1 = (MutualCalibration *) 0 ;
+  size_t arg2 ;
+  std::vector< size_t > result;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(MutualCalibration **)&jarg1; 
+  arg2 = (size_t)jarg2; 
+  result = ((MutualCalibration const *)arg1)->randPerm(arg2);
+  *(std::vector< size_t > **)&jresult = new std::vector< size_t >((const std::vector< size_t > &)result); 
+  return jresult;
+}
+
+
 SWIGEXPORT void JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_MutualCalibration_1calibrateCamera(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
   MutualCalibration *arg1 = (MutualCalibration *) 0 ;
   
@@ -413,6 +1106,28 @@ SWIGEXPORT void JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_MutualCa
   (void)jarg1_;
   arg1 = *(MutualCalibration **)&jarg1; 
   (arg1)->calibrateCamera();
+}
+
+
+SWIGEXPORT void JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_MutualCalibration_1ransacMutualCalibrateWithHorizontalChessboard(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  MutualCalibration *arg1 = (MutualCalibration *) 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(MutualCalibration **)&jarg1; 
+  (arg1)->ransacMutualCalibrateWithHorizontalChessboard();
+}
+
+
+SWIGEXPORT void JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_MutualCalibration_1lsMutualCalibrateWithHorizontalChessboard(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  MutualCalibration *arg1 = (MutualCalibration *) 0 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(MutualCalibration **)&jarg1; 
+  (arg1)->lsMutualCalibrateWithHorizontalChessboard();
 }
 
 

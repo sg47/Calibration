@@ -16,14 +16,21 @@ import android.view.View;
 public class CameraView extends AbstractCameraView {
 	private static final String TAG = "Calibration::CamView";
     
-	public static final boolean MODE_USEOPENCV = true;
-	public static final boolean MODE_USESUBPIXEL = false;
-
+	//--   calibration object constants
+	// TODO: fix capitaliztion:
+	public boolean MODE_USEOPENCVCORNER = true;
+	public boolean MODE_USERANSCA = false;
+	public boolean MODE_OPENCVCALIB = true;
+	public boolean MODE_USEONLYIMU  = true;
+	public boolean MODE_CHESSBHORZ = true;
+	public int checkerRows = 6;
+	public int checkerCols = 9;
+	
+	
     private Mat mYuv;
     private Mat mRgba;
     private Mat mGraySubmat;
 
-    private boolean mMode = MODE_USEOPENCV;
 	private Bitmap mBitmap;
 	
 	// the C++ object
@@ -33,14 +40,11 @@ public class CameraView extends AbstractCameraView {
         super(context, attrs);
     }
     
-    public void setMode(boolean mode){
-    	mMode = mode;
-    }
     
+   
 	@Override
 	protected void onPreviewStarted(int previewWidtd, int previewHeight) {
-		// initialize calibration object
-		calibrationObject = new MutualCalibration(getFrameHeight(), getFrameWidth(), 6, 9, mMode, mMode);
+		
         // initialize Mats before usage
         mYuv = new Mat(getFrameHeight() + getFrameHeight() / 2, getFrameWidth(), CvType.CV_8UC1);
         // Y channel is gray
@@ -49,6 +53,16 @@ public class CameraView extends AbstractCameraView {
         mBitmap = Bitmap.createBitmap(previewWidtd, previewHeight, Bitmap.Config.ARGB_8888);
 	}
 
+	@Override
+	public void grabAndProcess(){
+		// initialize calibration object
+		Log.i(TAG,checkerRows + ", " + checkerCols);
+		if(calibrationObject == null)
+		calibrationObject = new MutualCalibration(getFrameHeight(), getFrameWidth(), checkerRows, 
+				checkerCols, MODE_USEOPENCVCORNER, MODE_OPENCVCALIB, MODE_USEONLYIMU, MODE_CHESSBHORZ, MODE_USERANSCA);
+		super.grabAndProcess();
+	}
+	
 	@Override
 	protected void onPreviewStopped() {
 		
@@ -80,8 +94,7 @@ public class CameraView extends AbstractCameraView {
         // Native code call
         boolean success = calibrationObject.tryAddingChessboardImage(mGraySubmat.getNativeObjAddr(), mRgba.getNativeObjAddr());
         if (success){
-//        	Log.i(TAG,"" + (double)sensorValue[0] + (double)sensorValue[1] + (double)sensorValue[2]);
-        	calibrationObject.addIMUData((double)sensorValue[0], (double)sensorValue[1], (double)sensorValue[2]);
+        	calibrationObject.addIMUGravityVector((double)sensorValue[0], (double)sensorValue[1], (double)sensorValue[2]);
         }
         Bitmap bmp = mBitmap;
         try {
@@ -93,6 +106,13 @@ public class CameraView extends AbstractCameraView {
         }
         CalibrationActivity.updateUI(CalibrationActivity.IMAGES_TXT, String.valueOf(calibrationObject.getNumberOfImages()), null);
         return bmp;
+    }
+    
+    @Override
+    protected float[] saveSensorData(){
+    	float[] afterSensor = CalibrationActivity.latestSensor;
+    	return interpSensor(CalibrationActivity.beforeSensor, afterSensor);
+    	
     }
 
     private float[] interpSensor(float[] before, float[] after) {
