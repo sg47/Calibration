@@ -178,7 +178,8 @@ MutualCalibration::tryAddingVanishingPointImage(cv::Mat & inputImage, cv::Mat & 
 		cv::Mat R = vanishingPoint.getRotation(); 
 		__android_log_print(
 				ANDROID_LOG_INFO, "g", "%lf, %lf, %lf", R.at<double>(0, 2), R.at<double>(1, 2), R.at<double>(2, 2));
-		mgsCamera.push_back(-R.col(2) * 1.0); 
+//		mgsCamera.push_back(-R.col(2) * 1.0); 
+		mRsCamera.push_back(R * 1.0); 
 		mVanishingPointImages++; 
 		return true; 
 	}
@@ -280,13 +281,38 @@ MutualCalibration::ransacMutualCalibrateWithHorizontalChessboard()
 		cv::Mat S(3, 3, CV_64F); 
 		cv::Mat T(3, 3, CV_64F); 
 		if (mUseOnlyIMUGravity)
-		{
+		{	
+			cv::Mat ideal(3, 3, CV_64F); 
+			ideal.at<double>(0, 0) = 0; 
+			ideal.at<double>(0, 1) = -1; 
+			ideal.at<double>(0, 2) = 0; 
+			ideal.at<double>(1, 0) = -1 
+			ideal.at<double>(1, 1) = 0; 
+			ideal.at<double>(1, 2) = 0; 
+			ideal.at<double>(2, 0) = 0; 
+			ideal.at<double>(2, 1) = 0; 
+			ideal.at<double>(2, 2) = -1; 
+			for (size_t i = 0; i < mRsCamera.size(); i++)
+			{
+				mgsCamera.push_back(mRsCamera.col(0) * 1.0); 
+				if (mgsIMU[i].dot(-mRsCamera.col(0)) < mgsIMU[i].dot(mgsCamera[i]))
+					(-mRsCamera).col(0).copyTo(mgsCamera[i]); 
+				if (mgsIMU[i].dot(mRsCamera.col(1)) < mgsIMU[i].dot(mgsCamera[i]))
+					(mRsCamera).col(1).copyTo(mgsCamera[i]); 
+				if (mgsIMU[i].dot(-mRsCamera.col(1)) < mgsIMU[i].dot(mgsCamera[i]))
+					(-mRsCamera).col(1).copyTo(mgsCamera[i]); 
+				if (mgsIMU[i].dot(mRsCamera.col(2)) < mgsIMU[i].dot(mgsCamera[i]))
+					(-mRsCamera).col(2).copyTo(mgsCamera[i]); 
+				if (mgsIMU[i].dot(-mRsCamera.col(2)) < mgsIMU[i].dot(mgsCamera[i]))
+					(-mRsCamera).col(2).copyTo(mgsCamera[i]); 
+			}
+
 			// R * S = T
 			// S = R_c * [0; 0; -1] 
 			// T = g
-			S.col(0) = -mgsCamera[perm[0]] * 1.0; 
-			S.col(1) = -mgsCamera[perm[1]] * 1.0; 
-			S.col(2) = -mgsCamera[perm[2]] * 1.0; 
+			S.col(0) = mgsCamera[perm[0]] * 1.0; 
+			S.col(1) = mgsCamera[perm[1]] * 1.0; 
+			S.col(2) = mgsCamera[perm[2]] * 1.0; 
 			T.col(0) = mgsIMU[perm[0]] * 1.0; 
 			T.col(1) = mgsIMU[perm[1]] * 1.0; 
 			T.col(2) = mgsIMU[perm[2]] * 1.0;
