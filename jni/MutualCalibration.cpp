@@ -178,7 +178,7 @@ MutualCalibration::tryAddingVanishingPointImage(cv::Mat & inputImage, cv::Mat & 
 		cv::Mat R = vanishingPoint.getRotation(); 
 		__android_log_print(
 				ANDROID_LOG_INFO, "g", "%lf, %lf, %lf", R.at<double>(0, 2), R.at<double>(1, 2), R.at<double>(2, 2));
-		mgsCamera.push_back(R.col(2) * 1.0); 
+		mgsCamera.push_back(-R.col(2) * 1.0); 
 		mVanishingPointImages++; 
 		return true; 
 	}
@@ -209,6 +209,8 @@ MutualCalibration::calibrateCamera()
 	if (1)
 	{	
 		cv::calibrateCamera(objectPoints, mImagePoints, mImageSize, cameraMatrix, distCoeffs, rvecs, mtsCamera); 
+			__android_log_print(
+		ANDROID_LOG_INFO, "focal", "%lf", cameraMatrix.at<double>(0, 0));
 		for (size_t i = 0; i < rvecs.size(); i++)
 		{
 			cv::Mat RCamera; 

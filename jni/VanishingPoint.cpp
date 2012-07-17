@@ -1,4 +1,4 @@
-#include "Cas1DVanishingPoint.h"
+#include "VanishingPoint.h"
 
 #include <cmath>
 #include <algorithm>
@@ -7,25 +7,8 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <fstream>
 
-//#include <android/log.h>
+#include <android/log.h>
 
-std::vector<size_t>
-Cas1DVanishingPoint::randPerm(size_t n) const 
-{
-	std::vector<size_t> perm; 
-	for(size_t i = 0; i < n; i++) perm.push_back(i);
-
-	for(size_t i = 0; i < n; i++) 
-	{	
-		size_t j = rand() % (n - i) + i;
-
-		size_t t = perm[j];
-		perm[j] = perm[i];
-		perm[i] = t;
-	}
-
-	return perm; 
-}
 
 Cas1DVanishingPoint::Cas1DVanishingPoint(const cv::Mat & image)
 {
@@ -91,12 +74,12 @@ Cas1DVanishingPoint::getRotation() const
 			R.at<double>(2, i) = -mFocal / len; 
 		}
 
-/*			__android_log_print(
+			__android_log_print(
 			ANDROID_LOG_INFO, "vR", "%lf %lf %lf \n   %lf %lf %lf \n %lf %lf %lf\n",
 			R.at<double>(0, 0), R.at<double>(0, 1), R.at<double>(0, 2),
 			R.at<double>(1, 0), R.at<double>(1, 1), R.at<double>(1, 2),
 			R.at<double>(2, 0), R.at<double>(2, 1), R.at<double>(2, 2));
-*/
+
 		return R * 1.0; 
 	}
 	else if (mMessage == THREE_DETECTED_WITH_TWO_INFINITE)
@@ -174,14 +157,13 @@ Cas1DVanishingPoint::detectLines()
 //	std::cout << blurRadius << std::endl; 
 	cv::Mat blured; 
 	cv::GaussianBlur(mImage, blured, cv::Size(2 * blurRadius + 1, 2 * blurRadius + 1), blurRadius); 
-	cv::equalizeHist(blured, blured); 
 	cv::Mat edge; 
 	cv::Canny(blured, edge, 50, 100, 3); 
 /*	cv::namedWindow("edge"); 
 	cv::imshow("edge", blured); 
 	cv::waitKey(); */
 	cv::HoughLinesP(edge, mLines, 1, CV_PI/180, min_vote, min_length, 10);
-//	std::cout << mLines.size() << " lines detected. " << std::endl; 
+	std::cout << mLines.size() << " lines detected. " << std::endl; 
 /*	for (size_t i = 0; i < mLines.size(); i++)
 	{
 		cv::line(mSketch, cv::Point2f(mLines[i][0], mLines[i][1]), cv::Point2f(mLines[i][2], mLines[i][3]), cv::Scalar(0, 0, 244), 3, 8); 
@@ -250,7 +232,7 @@ Cas1DVanishingPoint::distance(float theta, float rho, cv::Vec4f line) const
 	float l_y = line[1] - (line[1] + line[3]) / 2.0f; 
 
 	float proj = v_x * l_x + v_y * l_y; 
-//	std::cout << sqrt(l_x * l_x + l_y * l_y - proj * proj) << std::endl; 
+	std::cout << sqrt(l_x * l_x + l_y * l_y - proj * proj) << std::endl; 
 	return sqrt(l_x * l_x + l_y * l_y - proj * proj); 
 }
 
@@ -278,7 +260,7 @@ Cas1DVanishingPoint::findTheta(const std::vector<float> & thetas, std::vector<si
 	float theta_threshold = 5.0f / 360 * CV_PI; 
 
 	int channel = 0; 	
-	int histSize = std::max((int)thetas.size() / 2, 90); 
+	int histSize = thetas.size() < 360 ? 90 : 360; 
 	float histRange[] = {-CV_PI, CV_PI}; 
 	const float *histRanges[] = {histRange}; 
 	cv::Mat data(thetas); 
@@ -287,8 +269,8 @@ Cas1DVanishingPoint::findTheta(const std::vector<float> & thetas, std::vector<si
 
 	cv::Point max_loc; 
 	cv::minMaxLoc(hist, NULL, NULL, NULL, &max_loc); 
+//	std::cout << hist << std::endl; 
 	float theta = histRange[0] + max_loc.y * (histRange[1] - histRange[0]) / histSize; 
-//	std::cout << hist << "--" << theta << std::endl; 
 
 	for (size_t i = 0; i < thetas.size(); i++)
 	{
@@ -321,7 +303,7 @@ Cas1DVanishingPoint::findRho(const std::vector<float> & rhos, const std::vector<
 //	std::cout << hist << std::endl; 
 	cv::Point max_loc; 
 	cv::minMaxLoc(hist, NULL, NULL, NULL, &max_loc); 
-	float phi = histRange[0] + (0.5 + max_loc.y) * (histRange[1] - histRange[0]) / histSize; 
+	float phi = histRange[0] + max_loc.y * (histRange[1] - histRange[0]) / histSize; 
 	float rho = z * tan(phi); 
 	return rho; 
 }
@@ -342,49 +324,6 @@ Cas1DVanishingPoint::findExteriorVanishingPt(const std::vector<cv::Point2f> & pt
 	extVPRho = findRho(extRhos, idx); 
 }
 
-void 
-Cas1DVanishingPoint::findInteriorVanishingPt(const std::vector<cv::Vec4i> & lines, float & intVPTheta, float & intVPRho) const
-{
-	float p = 0.995f; 
-	float r = 2.0f / lines.size(); 
-	float k = log(1.0f - p) / log(1.0f - r * r); 
-	size_t max_iter = 1000; 
-	size_t it = 0; 
-	size_t max_inliers = 2; 
-	float best_theta, best_rho; 
-	while (it < k && it < max_iter)
-	{
-		std::vector<size_t> perm = randPerm(lines.size()); 
-		std::vector<cv::Vec4i> samples; 
-		samples.push_back(lines[perm[0]]); 
-		samples.push_back(lines[perm[1]]); 
-		cv::Point2f guess = convergeLines(samples); 
-		float th = atan2(guess.y, guess.x); 
-		float rh = hypot(guess.x, guess.y); 
-		if (rh > mInteriorRadius) continue; 
-
-		size_t inliers = linesSupport(th, rh, lines).size(); 
-//		std::cout << cv::Mat(guess) << inliers << std::endl; 
-//		showLines(linesSupport(guess)); 
-		if (inliers > max_inliers)
-		{
-			max_inliers = inliers; 
-			best_theta = th; 
-			best_rho = rh; 
-
-			r = (float)max_inliers / lines.size(); 
-			k = log(1.0f - p) / log(1.0f - r * r); 
-			it = 0; 
-		}
-//		std::cout << k << " " << it  << std::endl; 
-		it++; 
-	}
-	intVPTheta = best_theta; 
-	intVPRho = best_rho; 
-
-}
-
-/*
 void 
 Cas1DVanishingPoint::findInteriorVanishingPt(const std::vector<cv::Point2f> & pts, float & intVPTheta, float & intVPRho) const
 {
@@ -441,7 +380,6 @@ Cas1DVanishingPoint::findInteriorVanishingPt(const std::vector<cv::Point2f> & pt
 			yWeights[i] = 0.0f; 
 
 	}
-	std::cout << cv::Mat(xWeights) << std::endl; 
 	size_t xIndex = 0, yIndex = 0; 
 	for (size_t i = 0; i < histSize; i++)
 	{
@@ -454,7 +392,7 @@ Cas1DVanishingPoint::findInteriorVanishingPt(const std::vector<cv::Point2f> & pt
 	intVPTheta = atan2(intVP.y, intVP.x); 
 	intVPRho = hypot(intVP.x, intVP.y); 
 }
-*/
+
 void 
 Cas1DVanishingPoint::find3rdDegenVanishingPt(const std::vector<cv::Point2f> & pts, 
 											 const std::vector<float> & vanishingThetas, 
@@ -472,6 +410,7 @@ Cas1DVanishingPoint::find3rdDegenVanishingPt(const std::vector<cv::Point2f> & pt
 		for (size_t i = 0; i < pts.size(); i++)
 		{
 			float theta = atan2(pts[i].y, pts[i].x); 
+			std::cout << theta << " ";  
 			if (fabs(theta_cand - theta) < theta_threshold |
 				2.0f * CV_PI - fabs(theta_cand - theta) < theta_threshold)
 			{
@@ -521,7 +460,7 @@ Cas1DVanishingPoint::findOrthogonalVanishingPts()
 		size_t intSupport = 0; 
 		if (!interiorUsed && intPts.size() > 0)
 		{
-			findInteriorVanishingPt(remaining_lines, intVPTheta, intVPRho); 
+			findInteriorVanishingPt(intPts, intVPTheta, intVPRho); 
 			intVP.x = intVPRho * cos(intVPTheta); 
 			intVP.y = intVPRho * sin(intVPTheta); 
 			intSupport = linesSupport(intVPTheta, intVPRho, remaining_lines).size(); 
@@ -583,7 +522,7 @@ Cas1DVanishingPoint::findOrthogonalVanishingPts()
 	if (angle < CV_PI / 2.0f - 10.0f * threshold) mMessage = TWO_NON_ORTHOGONAL_DETECTED; 	
 	// 
 	// degen
-	else if (angle >= CV_PI / 2.0f - 10.0f * threshold && angle < CV_PI / 2.0f + 1.0 * threshold)
+	else if (angle >= CV_PI / 2.0f - 10.0f * threshold && angle < CV_PI / 2.0f + 3.0 * threshold)
 	{
 		if (mod(vanishingThetas[1] - vanishingThetas[0], 2.0f * CV_PI) < CV_PI)
 			vanishingThetas[1] = vanishingThetas[0] + CV_PI / 2.0f; 
@@ -626,7 +565,7 @@ Cas1DVanishingPoint::findOrthogonalVanishingPts()
 		size_t intSupport = 0, extSupport = 0;  
 		if (cv::norm(guess) < mInteriorRadius * 2 && !interiorUsed)
 		{
-			findInteriorVanishingPt(remaining_lines, intTheta, intRho); 
+			findInteriorVanishingPt(intersectLines(remaining_lines), intTheta, intRho); 
 			intSupport = linesSupport(intTheta, intRho, remaining_lines).size(); 
 		}
 		else 
@@ -666,7 +605,6 @@ Cas1DVanishingPoint::findOrthogonalVanishingPts()
 	mVanishingPts = vanishingPts; 
 /*	std::cout << cv::Mat(vanishingPts) << std::endl; 
 	showVanishing(vanishingPts); */
-//	std::cout << mMessage << std::endl; 
 }
 
 bool

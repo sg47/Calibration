@@ -1,4 +1,4 @@
-#include "RansacRansacVanishingPoint.h"
+#include "RansacVanishingPoint.h"
 
 #include <cmath>
 #include <utility>
@@ -6,9 +6,11 @@
 #include <iostream>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <android/log.h>
 
 RansacVanishingPoint::RansacVanishingPoint(const cv::Mat & image, cv::Point2f pp, float focal)
 {
+
 	if (pp.x > 0 && pp.y > 0)
 	{
 		mFixPriciplePt = true; 
@@ -25,9 +27,9 @@ RansacVanishingPoint::RansacVanishingPoint(const cv::Mat & image, cv::Point2f pp
 
 	if (image.channels() > 1)	
 		cv::cvtColor(image, mImage, CV_BGR2GRAY); 
-	else image.copyTo(image, mImage); 
+	else image.copyTo(mImage); 
 	cv::cvtColor(mImage, mSketch, CV_GRAY2BGR); 
-	
+
 	detectLines(); 
 	for (size_t i = 0; i < mLines.size(); i++)
 	{
@@ -36,7 +38,9 @@ RansacVanishingPoint::RansacVanishingPoint(const cv::Mat & image, cv::Point2f pp
 		mLines[i][2] -= mImage.cols / 2; 
 		mLines[i][3] -= mImage.rows / 2; 
 	}
-	showLines(mLines); 
+
+	
+//	showLines(mLines); 
 }
 
 void 
@@ -52,7 +56,7 @@ RansacVanishingPoint::findVanishingPts()
 		std::vector<cv::Vec4i> support = linesSupport(vpt, lines); 
 
 //		std::cout << "-----------" << cv::Mat(vpt) << std::endl; 
-		showLines(support); 
+//		showLines(support); 
 		mVanishingPts.push_back(vpt); 
 		if (support.size() >= min_support) 
 		{
@@ -65,11 +69,11 @@ void
 RansacVanishingPoint::findOrthogonalVanishingPts()
 {
 	findVanishingPts(); 
-	mOrthogonalVanishingPts = selectOrthogonalRansacVanishingPoints(); 
+	mOrthogonalVanishingPts = selectOrthogonalVanishingPts(); 
 	if (!mOrthogonalVanishingPts.empty())
 	{
 		float err; 
-		selectOrthogonalRansacVanishingPointsHelper(mOrthogonalVanishingPts, mFocal, err); 
+		selectOrthogonalVanishingPtsHelper(mOrthogonalVanishingPts, mFocal, err); 
 	}
 }
 
@@ -81,7 +85,7 @@ RansacVanishingPoint::orthogonalityDetected() const
 
 
 cv::Mat 
-Cas1DVanishingPoint::getSketch() const
+RansacVanishingPoint::getSketch() const
 {
 	cv::Mat m; 
 	mSketch.copyTo(m); 
@@ -145,7 +149,7 @@ RansacVanishingPoint::selectOrthogonalVanishingPts() const
 				vpts.push_back(mVanishingPts[j]); 
 				vpts.push_back(mVanishingPts[k]); 
 				float focal, error; 
-				selectOrthogonalRansacVanishingPointsHelper(vpts, focal, error); 	
+				selectOrthogonalVanishingPtsHelper(vpts, focal, error); 	
 				if (error < min_err)
 				{
 					triplet = vpts; 
@@ -246,16 +250,17 @@ RansacVanishingPoint::detectLines()
 	int min_vote = 30.0 / 800 * hypot(mImage.cols, mImage.rows); 
 //	std::cout << blurRadius << std::endl; 
 	cv::Mat blured; 
+
 	cv::GaussianBlur(mImage, blured, cv::Size(2 * blurRadius + 1, 2 * blurRadius + 1), blurRadius); 
 	cv::equalizeHist(blured, blured); 
 
 	cv::Mat edge; 
 	cv::Canny(blured, edge, 50, 100, 3); 
 	cv::HoughLinesP(edge, mLines, 1, CV_PI/180, min_vote, min_length, 2);
-	cv::namedWindow("blured"); 
+/*	cv::namedWindow("blured"); 
 	cv::imshow("blured", edge); 
 	cv::waitKey(); 
-
+*/
 /*	for (size_t i = 0; i < mLines.size(); i++)
 	{
 		cv::line(mSketch, cv::Point2f(mLines[i][0], mLines[i][1]), cv::Point2f(mLines[i][2], mLines[i][3]), cv::Scalar(0, 0, 244), 3, 8); 
@@ -419,7 +424,7 @@ RansacVanishingPoint::ransac2Lines(const std::vector<cv::Vec4i> & lines) const
 		it++; 
 	}
 //	std::cout << "==========" << cv::Mat(vanishingPt) << "  " << max_inliers << std::endl; 
-	showLines(linesSupport(vanishingPt, lines)); 
+//	showLines(linesSupport(vanishingPt, lines)); 
 //	vanishingPt = intersectLines(linesSupport(vanishingPt, lines)); 
 //	std::cout << "=====" << cv::Mat(vanishingPt) << "  " << max_inliers << std::endl; 
 
