@@ -176,8 +176,15 @@ MutualCalibration::tryAddingVanishingPointImage(cv::Mat & inputImage, cv::Mat & 
 	if (vanishingPoint.orthogonalityDetected())
 	{
 		cv::Mat R = vanishingPoint.getRotation(); 
+		std::vector<cv::Point2f> ovpts = vanishingPoint.selectOrthogonalVanishingPts(); 
+		
 		__android_log_print(
-				ANDROID_LOG_INFO, "g", "%lf, %lf, %lf", R.at<double>(0, 2), R.at<double>(1, 2), R.at<double>(2, 2));
+				ANDROID_LOG_INFO, "vp0", "%lf, %lf", ovpts[0].x, ovpts[0].y); 
+		__android_log_print(
+				ANDROID_LOG_INFO, "vp1", "%lf, %lf", ovpts[1].x, ovpts[1].y); 
+		__android_log_print(
+				ANDROID_LOG_INFO, "vp2", "%lf, %lf", ovpts[2].x, ovpts[2].y); 
+
 //		mgsCamera.push_back(-R.col(2) * 1.0); 
 		mRsCamera.push_back(R * 1.0); 
 		mVanishingPointImages++; 
@@ -217,7 +224,7 @@ MutualCalibration::calibrateCamera()
 			cv::Mat RCamera; 
 			cv::Rodrigues(rvecs[i], RCamera); 
 			mRsCamera.push_back(RCamera * 1.0); 
-			mgsCamera.push_back(RCamera.col(2) * 1.0); 
+//			mgsCamera.push_back(RCamera.col(2) * 1.0);
 		}
 	}
 		
@@ -226,50 +233,61 @@ MutualCalibration::calibrateCamera()
 void 
 MutualCalibration::lsMutualCalibrateWithHorizontalChessboard()
 {
-	cv::Mat S(3, mgsCamera.size(), CV_64F); 
-	cv::Mat T(3, mgsCamera.size(), CV_64F); 
+	cv::Mat ideal(3, 3, CV_64F); 
+	ideal.at<double>(0, 0) = 0; 
+	ideal.at<double>(0, 1) = -1; 
+	ideal.at<double>(0, 2) = 0; 
+	ideal.at<double>(1, 0) = -1; 
+	ideal.at<double>(1, 1) = 0; 
+	ideal.at<double>(1, 2) = 0; 
+	ideal.at<double>(2, 0) = 0; 
+	ideal.at<double>(2, 1) = 0; 
+	ideal.at<double>(2, 2) = -1; 
+	__android_log_print(
+	ANDROID_LOG_INFO, "ideal", "set %d", mRsCamera.size()); 
+	for (size_t i = 0; i < mRsCamera.size(); i++)
+	{
+		cv::Mat R_c2i = ideal * mRsCamera[i]; 
+		showMat(mRsCamera[i], "RCi"); 
+		showMat(R_c2i, "Rc2i"); 
 
-			cv::Mat ideal(3, 3, CV_64F); 
-			ideal.at<double>(0, 0) = 0; 
-			ideal.at<double>(0, 1) = -1; 
-			ideal.at<double>(0, 2) = 0; 
-			ideal.at<double>(1, 0) = -1; 
-			ideal.at<double>(1, 1) = 0; 
-			ideal.at<double>(1, 2) = 0; 
-			ideal.at<double>(2, 0) = 0; 
-			ideal.at<double>(2, 1) = 0; 
-			ideal.at<double>(2, 2) = -1; 
-			__android_log_print(
-			ANDROID_LOG_INFO, "ideal", "set %d", mRsCamera.size()); 
-			for (size_t i = 0; i < mRsCamera.size(); i++)
-			{
-				mgsCamera.push_back(mRsCamera[i].col(0) * 1.0); 
-				__android_log_print(
-					ANDROID_LOG_INFO, "mg", "ffff"); 
-				if (mgsIMU[i].dot(-mRsCamera[i].col(0)) < mgsIMU[i].dot(mgsCamera[i]))
-					cv::Mat(-mRsCamera[i].col(0)).copyTo(mgsCamera[i]); 
-				if (mgsIMU[i].dot(mRsCamera[i].col(1)) < mgsIMU[i].dot(mgsCamera[i]))
-					cv::Mat(mRsCamera[i].col(1)).copyTo(mgsCamera[i]); 
-				if (mgsIMU[i].dot(-mRsCamera[i].col(1)) < mgsIMU[i].dot(mgsCamera[i]))
-					cv::Mat(-mRsCamera[i].col(1)).copyTo(mgsCamera[i]); 
-				if (mgsIMU[i].dot(mRsCamera[i].col(2)) < mgsIMU[i].dot(mgsCamera[i]))
-					cv::Mat(-mRsCamera[i].col(2)).copyTo(mgsCamera[i]); 
-				if (mgsIMU[i].dot(-mRsCamera[i].col(2)) < mgsIMU[i].dot(mgsCamera[i]))
-					cv::Mat(-mRsCamera[i].col(2)).copyTo(mgsCamera[i]); 
-			}
+		cv::Mat gCamera = R_c2i.col(0) * 1.0;  
+
+		if (cv::norm(mgsIMU[i] + R_c2i.col(0)) < cv::norm(mgsIMU[i] - gCamera))
+			gCamera = -R_c2i.col(0) * 1.0;
+
+		if (cv::norm(mgsIMU[i] - R_c2i.col(1)) < cv::norm(mgsIMU[i] - gCamera))
+			gCamera = R_c2i.col(1) * 1.0;
+
+		if (cv::norm(mgsIMU[i] + R_c2i.col(1)) < cv::norm(mgsIMU[i] - gCamera))
+			gCamera = -R_c2i.col(1) * 1.0; 
+
+		if (cv::norm(mgsIMU[i] - R_c2i.col(2)) < cv::norm(mgsIMU[i] - gCamera))
+			gCamera = R_c2i.col(2) * 1.0; 
+
+		if (cv::norm(mgsIMU[i] + R_c2i.col(2)) < cv::norm(mgsIMU[i] - gCamera))
+			gCamera = -R_c2i.col(2) * 1.0; 
+
+		mgsCamera.push_back(ideal.t() * gCamera * 1.0);
+	
+		__android_log_print(ANDROID_LOG_INFO, "mg", "gi = %lf, %lf, %lf, gc = %lf, %lf, %lf", 
+				mgsIMU[i].at<double>(0), mgsIMU[i].at<double>(1), mgsIMU[i].at<double>(2), 
+				mgsCamera[i].at<double>(0), mgsCamera[i].at<double>(1), mgsCamera[i].at<double>(2) ); 
+	}
 
 
-				__android_log_print(
-					ANDROID_LOG_INFO, "mg", "gggg"); 
-
+	cv::Mat S(3, mgsCamera.size(), CV_64F);
+	cv::Mat T(3, mgsCamera.size(), CV_64F);
+	__android_log_print(
+				ANDROID_LOG_INFO, "ls", "%d", mgsCamera.size());
 	for (size_t i = 0; i < mgsCamera.size(); i++)
 	{
 		if (mUseOnlyIMUGravity)
 		{
-			S.col(i) = -mgsCamera[i] * 1.0; 
+			S.col(i) = mgsCamera[i] * 1.0;
 			T.col(i) = mgsIMU[i] * 1.0; 
 			__android_log_print(
-			ANDROID_LOG_INFO, "ls", "1", S.cols, S.rows); 
+			ANDROID_LOG_INFO, "ls", "%d %d", S.cols, S.rows);
 		}
 		else
 		{

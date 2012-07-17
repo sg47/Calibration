@@ -12,13 +12,22 @@
 # generated files
 bin/
 gen/
+obj/
+libs/
 
 # Local configuration file (sdk path, etc)
 local.properties
 
 #
 *.swp
+*~
 
 #
 *.jpg
 *.png
+
+#
+.classpath
+.project
+
+

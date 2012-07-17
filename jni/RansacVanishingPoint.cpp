@@ -6,7 +6,7 @@
 #include <iostream>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
-//#include <android/log.h>
+#include <android/log.h>
 
 RansacVanishingPoint::RansacVanishingPoint(const cv::Mat & image, cv::Point2f pp, float focal)
 {

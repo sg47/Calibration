@@ -4,13 +4,10 @@ include $(CLEAR_VARS)
 
 OPENCV_CAMERA_MODULES:=off
 
-include ../includeOpenCV.mk
-ifeq ("$(wildcard $(OPENCV_MK_PATH))","")
-	#try to load OpenCV.mk from default install location
-	include $(TOOLCHAIN_PREBUILT_ROOT)/user/share/OpenCV/OpenCV.mk
-else
-	include $(OPENCV_MK_PATH)
-endif
+OPENCV_MK_PATH:=/home/li/Workspace/temp/OpenCV-2.4.1-android-bin2/OpenCV-2.4.1/share/opencv/OpenCV.mk
+
+include $(OPENCV_MK_PATH)
+
 
 LOCAL_MODULE    := mixed_sample
 LOCAL_SRC_FILES := calibration_wrap.cpp MutualCalibration.cpp Chessboard.cpp CataCameraParameters.cpp Cas1DVanishingPoint.cpp RansacVanishingPoint.cpp
