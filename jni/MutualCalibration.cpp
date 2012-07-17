@@ -9,7 +9,7 @@
 
 #include "CataCameraParameters.h"
 #include "Chessboard.h"
-#include "VanishingPoint.h"
+#include "Cas1DVanishingPoint.h"
 #include "MutualCalibration.h"
 
 void showMat(cv::Mat R, const char* s)
@@ -94,11 +94,18 @@ MutualCalibration::addFullIMURotationByQuaternion(double r0, double r1, double r
 	rvec.at<double>(1) = r1; 
 	rvec.at<double>(2) = r2; 
 	double a = cv::norm(rvec); 
+
+	__android_log_print(
+			ANDROID_LOG_INFO, "full", "%lf, %lf, %lf -- a = %lf", r0, r1, r2, a);
+
+
+
 	a = 2 * asin(a); 
 	rvec = rvec / cv::norm(rvec) * a; 
 
 	cv::Mat RIMU; 
 	cv::Rodrigues(rvec, RIMU); 
+
 	RIMU = RIMU.t(); 
 	mRsIMU.push_back(RIMU * 1.0); 
 }
@@ -142,8 +149,14 @@ MutualCalibration::tryAddingVanishingPointImage(cv::Mat & inputImage, cv::Mat & 
 		size_t idx = 0; 
 		for (size_t i = 0; i < 3; i++)
 		{
+			__android_log_print(
+				ANDROID_LOG_INFO, "asdf", "%lf, %lf", fabs(R.at<double>(1, idx)), fabs(R.at<double>(1, i)));
+		
 			if (fabs(R.at<double>(1, idx) < fabs(R.at<double>(1, i))) )
+			{
+		
 				idx = i; 
+			}
 		}
 		__android_log_print(
 				ANDROID_LOG_INFO, "g", "%lf, %lf, %lf", R.at<double>(0, idx), R.at<double>(1, idx), R.at<double>(2, idx));
@@ -203,6 +216,8 @@ MutualCalibration::lsMutualCalibrateWithHorizontalChessboard()
 		{
 			S.col(i) = -mgsCamera[i] * 1.0; 
 			T.col(i) = mgsIMU[i] * 1.0; 
+			__android_log_print(
+			ANDROID_LOG_INFO, "ls", "1", S.cols, S.rows); 
 		}
 		else
 		{
