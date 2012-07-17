@@ -228,6 +228,40 @@ MutualCalibration::lsMutualCalibrateWithHorizontalChessboard()
 {
 	cv::Mat S(3, mgsCamera.size(), CV_64F); 
 	cv::Mat T(3, mgsCamera.size(), CV_64F); 
+
+			cv::Mat ideal(3, 3, CV_64F); 
+			ideal.at<double>(0, 0) = 0; 
+			ideal.at<double>(0, 1) = -1; 
+			ideal.at<double>(0, 2) = 0; 
+			ideal.at<double>(1, 0) = -1; 
+			ideal.at<double>(1, 1) = 0; 
+			ideal.at<double>(1, 2) = 0; 
+			ideal.at<double>(2, 0) = 0; 
+			ideal.at<double>(2, 1) = 0; 
+			ideal.at<double>(2, 2) = -1; 
+			__android_log_print(
+			ANDROID_LOG_INFO, "ideal", "set %d", mRsCamera.size()); 
+			for (size_t i = 0; i < mRsCamera.size(); i++)
+			{
+				mgsCamera.push_back(mRsCamera[i].col(0) * 1.0); 
+				__android_log_print(
+					ANDROID_LOG_INFO, "mg", "ffff"); 
+				if (mgsIMU[i].dot(-mRsCamera[i].col(0)) < mgsIMU[i].dot(mgsCamera[i]))
+					cv::Mat(-mRsCamera[i].col(0)).copyTo(mgsCamera[i]); 
+				if (mgsIMU[i].dot(mRsCamera[i].col(1)) < mgsIMU[i].dot(mgsCamera[i]))
+					cv::Mat(mRsCamera[i].col(1)).copyTo(mgsCamera[i]); 
+				if (mgsIMU[i].dot(-mRsCamera[i].col(1)) < mgsIMU[i].dot(mgsCamera[i]))
+					cv::Mat(-mRsCamera[i].col(1)).copyTo(mgsCamera[i]); 
+				if (mgsIMU[i].dot(mRsCamera[i].col(2)) < mgsIMU[i].dot(mgsCamera[i]))
+					cv::Mat(-mRsCamera[i].col(2)).copyTo(mgsCamera[i]); 
+				if (mgsIMU[i].dot(-mRsCamera[i].col(2)) < mgsIMU[i].dot(mgsCamera[i]))
+					cv::Mat(-mRsCamera[i].col(2)).copyTo(mgsCamera[i]); 
+			}
+
+
+				__android_log_print(
+					ANDROID_LOG_INFO, "mg", "gggg"); 
+
 	for (size_t i = 0; i < mgsCamera.size(); i++)
 	{
 		if (mUseOnlyIMUGravity)
@@ -282,31 +316,6 @@ MutualCalibration::ransacMutualCalibrateWithHorizontalChessboard()
 		cv::Mat T(3, 3, CV_64F); 
 		if (mUseOnlyIMUGravity)
 		{	
-			cv::Mat ideal(3, 3, CV_64F); 
-			ideal.at<double>(0, 0) = 0; 
-			ideal.at<double>(0, 1) = -1; 
-			ideal.at<double>(0, 2) = 0; 
-			ideal.at<double>(1, 0) = -1 
-			ideal.at<double>(1, 1) = 0; 
-			ideal.at<double>(1, 2) = 0; 
-			ideal.at<double>(2, 0) = 0; 
-			ideal.at<double>(2, 1) = 0; 
-			ideal.at<double>(2, 2) = -1; 
-			for (size_t i = 0; i < mRsCamera.size(); i++)
-			{
-				mgsCamera.push_back(mRsCamera.col(0) * 1.0); 
-				if (mgsIMU[i].dot(-mRsCamera.col(0)) < mgsIMU[i].dot(mgsCamera[i]))
-					(-mRsCamera).col(0).copyTo(mgsCamera[i]); 
-				if (mgsIMU[i].dot(mRsCamera.col(1)) < mgsIMU[i].dot(mgsCamera[i]))
-					(mRsCamera).col(1).copyTo(mgsCamera[i]); 
-				if (mgsIMU[i].dot(-mRsCamera.col(1)) < mgsIMU[i].dot(mgsCamera[i]))
-					(-mRsCamera).col(1).copyTo(mgsCamera[i]); 
-				if (mgsIMU[i].dot(mRsCamera.col(2)) < mgsIMU[i].dot(mgsCamera[i]))
-					(-mRsCamera).col(2).copyTo(mgsCamera[i]); 
-				if (mgsIMU[i].dot(-mRsCamera.col(2)) < mgsIMU[i].dot(mgsCamera[i]))
-					(-mRsCamera).col(2).copyTo(mgsCamera[i]); 
-			}
-
 			// R * S = T
 			// S = R_c * [0; 0; -1] 
 			// T = g
