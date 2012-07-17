@@ -6,17 +6,12 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.List;
-
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
-import android.graphics.Rect;
-import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.hardware.Camera.PreviewCallback;
-import android.hardware.Camera.Size;
 import android.os.Environment;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -25,7 +20,6 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 public abstract class AbstractCameraView extends SurfaceView implements SurfaceHolder.Callback {
     private static final String TAG = "Calibration::AbstractSurfaceView";
@@ -38,7 +32,6 @@ public abstract class AbstractCameraView extends SurfaceView implements SurfaceH
     private SurfaceHolder       mHolder;
     private int                 mFrameWidth;
     private int                 mFrameHeight;
-    private byte[]              mFrame;
     private Bitmap 				mBitmap;
     private ImageView			view;
     private int 				numImage = 0;
@@ -55,7 +48,11 @@ public abstract class AbstractCameraView extends SurfaceView implements SurfaceH
         File thisNewFolder = new File(mDataFolder);
         thisNewFolder.mkdirs();
     }
-
+	
+	public String getDataFolder(){
+		return mDataFolder;
+	}
+	
     public int getFrameWidth() {
         return mFrameWidth;
     }
@@ -90,8 +87,6 @@ public abstract class AbstractCameraView extends SurfaceView implements SurfaceH
     
     private PreviewCallback mPreviewListenerProcess = new PreviewCallback() {
         public void onPreviewFrame(byte[] data, Camera camera) {
-        	// TODO: remove mFrame variable?
-        	mFrame = data;
         	changeSurfaceSize(R.id.cameraViewer, 0, 0);
         	// process selected frame
         	mBitmap = processFrame(data);
@@ -111,7 +106,6 @@ public abstract class AbstractCameraView extends SurfaceView implements SurfaceH
     
     
     private Camera.PictureCallback jpegCallback = new Camera.PictureCallback() {
-		
 		@Override
 		public void onPictureTaken(byte[] data, Camera camera) {
 			File file = new File(mDataFolder + String.format("/%02d.jpg", numImage));
@@ -128,6 +122,7 @@ public abstract class AbstractCameraView extends SurfaceView implements SurfaceH
 				BufferedWriter writer = new BufferedWriter(new FileWriter(sensFile));
 				writer.write(str);
 				writer.flush();
+				writer.close();
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
@@ -174,24 +169,18 @@ public abstract class AbstractCameraView extends SurfaceView implements SurfaceH
         Log.i(TAG, "setupCamera");
             if (mCamera != null) {
                 Camera.Parameters params = mCamera.getParameters();
-                // hardcoded ( TODO )
+                // hardcoded ( FIXME )
                 mFrameWidth = 640;
                 mFrameHeight = 480;
                 
                 params.setPreviewSize(getFrameWidth(), getFrameHeight());
-                
-//                List<String> FocusModes = params.getSupportedFocusModes();
-//                
-//                if (FocusModes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO)){
-                	params.setFocusMode(Camera.Parameters.FOCUS_MODE_INFINITY);
-//                }            
+                params.setFocusMode(Camera.Parameters.FOCUS_MODE_INFINITY);
                 
                 mCamera.setParameters(params);
                 params = mCamera.getParameters();
                 /* Now allocate the buffer */
                 int size = params.getPreviewSize().width * params.getPreviewSize().height;
                 size  = size * ImageFormat.getBitsPerPixel(params.getPreviewFormat()) / 8;
-                mFrame = new byte [size];
                 
                 Log.i(TAG, "Camera Preview Size: " + params.getPreviewSize().width + "x" + params.getPreviewSize().height);
                 
@@ -209,9 +198,7 @@ public abstract class AbstractCameraView extends SurfaceView implements SurfaceH
             }
     }
     
-    public void surfaceChanged(SurfaceHolder _holder, int format, int width, int height) {
-//        Log.i(TAG, "surfaceChanged " + width + "x" + height);
-        
+    public void surfaceChanged(SurfaceHolder _holder, int format, int width, int height) {       
     }
 
     public void surfaceCreated(SurfaceHolder holder) {

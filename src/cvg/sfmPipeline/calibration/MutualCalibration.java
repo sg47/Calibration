@@ -63,6 +63,10 @@ public class MutualCalibration {
     return CalibrationJNI.MutualCalibration_tryAddingChessboardImage(swigCPtr, this, (inputImage), (outputImage));
   }
 
+  public boolean tryAddingVanishingPointImage(long inputImage, long outputImage) {
+    return CalibrationJNI.MutualCalibration_tryAddingVanishingPointImage(swigCPtr, this, (inputImage), (outputImage));
+  }
+
   public void addFullIMURotationByQuaternion(double r0, double r1, double r2) {
     CalibrationJNI.MutualCalibration_addFullIMURotationByQuaternion(swigCPtr, this, r0, r1, r2);
   }

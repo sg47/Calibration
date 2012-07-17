@@ -16,6 +16,7 @@ public class CalibrationJNI {
   public final static native long new_MutualCalibration__SWIG_4(long jarg1, long jarg2, long jarg3, long jarg4, boolean jarg5);
   public final static native long new_MutualCalibration__SWIG_5(long jarg1, long jarg2, long jarg3, long jarg4);
   public final static native boolean MutualCalibration_tryAddingChessboardImage(long jarg1, MutualCalibration jarg1_, long jarg2, long jarg3);
+  public final static native boolean MutualCalibration_tryAddingVanishingPointImage(long jarg1, MutualCalibration jarg1_, long jarg2, long jarg3);
   public final static native void MutualCalibration_addFullIMURotationByQuaternion(long jarg1, MutualCalibration jarg1_, double jarg2, double jarg3, double jarg4);
   public final static native void MutualCalibration_addIMUGravityVector(long jarg1, MutualCalibration jarg1_, double jarg2, double jarg3, double jarg4);
   public final static native long MutualCalibration_getNumberOfImages(long jarg1, MutualCalibration jarg1_);

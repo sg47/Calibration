@@ -34,19 +34,19 @@
 
         <Button
             android:id="@+id/grabImage"
-            android:layout_width="wrap_content"
+            android:layout_width="165dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="Grab Image" 
-            android:onClick="clickGrabImage"/>
+            android:onClick="clickGrabImage"
+            android:text="Grab Calib Image" />
 
         <Button
             android:id="@+id/calibrate"
-            android:layout_width="wrap_content"
+            android:layout_width="148dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="Calibrate" 
-            android:onClick="clickCalibrate"/>
+            android:onClick="clickCalibrate"
+            android:text="Calibrate" />
 
         <Space
             android:layout_width="match_parent"
@@ -57,8 +57,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="Images: 0"
-            android:textAppearance="?android:attr/textAppearanceMedium" />
+            android:text="Calib Images: 0"
+            android:textAppearance="?android:attr/textAppearanceSmall" />
 		<Space
             android:layout_width="match_parent"
             android:layout_height="10dp" />
@@ -83,7 +83,7 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="left"
                         android:gravity="left"
-                        android:text="Roll:       "
+                        android:text="X:       "
                         android:textAppearance="?android:attr/textAppearanceSmall" />
 
                     <TextView
@@ -111,7 +111,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:gravity="left"
-                        android:text="Pitch:     "
+                        android:text="Y:       "
                         android:textAppearance="?android:attr/textAppearanceSmall" />
 
                     <TextView
@@ -138,7 +138,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:gravity="left"
-                        android:text="Yaw:       "
+                        android:text="Z:       "
                         android:textAppearance="?android:attr/textAppearanceSmall" />
 
                     <TextView
@@ -146,6 +146,195 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="00.0"
+                        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                </LinearLayout>
+
+            </TableRow>
+
+        </TableLayout>
+
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=" "
+            android:textAppearance="?android:attr/textAppearanceSmall" />
+
+        <TableLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center" >
+
+            <TableRow
+                android:id="@+id/tableRow1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center" >
+
+                <TextView
+                    android:id="@+id/matrixLabel"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="Matrix Type"
+                    android:textAppearance="?android:attr/textAppearanceSmall" />
+
+            </TableRow>
+
+            <TableRow
+                android:id="@+id/tableRow2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center" >
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" 
+                    android:gravity="center">
+
+                    <TextView
+                        android:id="@+id/matrix_1_1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="0.0"
+                        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                    <TextView
+                        android:id="@+id/textView1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="  "
+                        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                    <TextView
+                        android:id="@+id/matrix_1_2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="0.0"
+                        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                    <TextView
+                        android:id="@+id/TextView01"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="  "
+                        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                    <TextView
+                        android:id="@+id/matrix_1_3"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="0.0"
+                        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                </LinearLayout>
+
+            </TableRow>
+
+            <TableRow
+                android:id="@+id/tableRow3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" 
+                android:gravity="center">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" 
+                    android:gravity="center">
+
+                    <TextView
+                        android:id="@+id/matrix_2_1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="0.0"
+                        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                    <TextView
+                        android:id="@+id/TextView02"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="  "
+                        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                    <TextView
+                        android:id="@+id/matrix_2_2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="0.0"
+                        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                    <TextView
+                        android:id="@+id/TextView03"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="  "
+                        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                    <TextView
+                        android:id="@+id/matrix_2_3"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="0.0"
+                        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                </LinearLayout>
+
+            </TableRow>
+
+            <TableRow
+                android:id="@+id/tableRow4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center" >
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+					android:gravity="center">
+
+                    <TextView
+                        android:id="@+id/matrix_3_1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="0.0"
+                        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                    <TextView
+                        android:id="@+id/TextView04"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="  "
+                        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                    <TextView
+                        android:id="@+id/matrix_3_2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="0.0"
+                        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                    <TextView
+                        android:id="@+id/TextView05"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="  "
+                        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                    <TextView
+                        android:id="@+id/matrix_3_3"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="0.0"
                         android:textAppearance="?android:attr/textAppearanceSmall" />
 
                 </LinearLayout>

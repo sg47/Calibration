@@ -1,5 +1,9 @@
 package cvg.sfmPipeline.calibration;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+
 import org.opencv.android.Utils;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -9,9 +13,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.View;
-import android.widget.TextView;
-import android.view.View;
 
 public class CameraView extends AbstractCameraView {
 	private static final String TAG = "Calibration::CamView";
@@ -90,11 +91,33 @@ public class CameraView extends AbstractCameraView {
     	float[] sensorValue = interpSensor(CalibrationActivity.beforeSensor, afterSensor);
         mYuv.put(0, 0, data);
         Imgproc.cvtColor(mYuv, mRgba, Imgproc.COLOR_YUV420sp2RGB, 4);
+        boolean success;
         
         // Native code call
-        boolean success = calibrationObject.tryAddingChessboardImage(mGraySubmat.getNativeObjAddr(), mRgba.getNativeObjAddr());
+        if (CalibrationActivity.globalMode == CalibrationActivity.MODE_CHECKERBOARD)
+        	success = calibrationObject.tryAddingChessboardImage(mGraySubmat.getNativeObjAddr(), mRgba.getNativeObjAddr());
+        else{
+        	success = calibrationObject.tryAddingVanishingPointImage(mGraySubmat.getNativeObjAddr(), mRgba.getNativeObjAddr());
+        	
+        	//also save the before and after images
+//        	Bitmap before = Bitmap.createBitmap(getFrameWidth(), getFrameHeight(), Bitmap.Config.ARGB_8888);
+//        	Bitmap after = Bitmap.createBitmap(getFrameWidth(), getFrameHeight(), Bitmap.Config.ARGB_8888);
+//        	Utils.matToBitmap(mGraySubmat, before);
+//        	Utils.matToBitmap(mRgba, after);
+//        	try {
+//				FileOutputStream input = new FileOutputStream( new File(getDataFolder() + String.format("/%02d_input.png", calibrationObject.getNumberOfImages())) );
+//				FileOutputStream output = new FileOutputStream( new File(getDataFolder() + String.format("/%02d_output.png", calibrationObject.getNumberOfImages())) );
+//				before.compress(Bitmap.CompressFormat.PNG, 100, input);
+//				after.compress(Bitmap.CompressFormat.PNG, 100, output);
+//			} catch (FileNotFoundException e) {
+//				e.printStackTrace();
+//			}
+        }
         if (success){
-        	calibrationObject.addIMUGravityVector((double)sensorValue[0], (double)sensorValue[1], (double)sensorValue[2]);
+        	if(MODE_USEONLYIMU)
+        		calibrationObject.addIMUGravityVector((double)sensorValue[0], (double)sensorValue[1], (double)sensorValue[2]);
+        	else
+        		calibrationObject.addFullIMURotationByQuaternion((double)sensorValue[0], (double)sensorValue[1], (double)sensorValue[2]);
         }
         Bitmap bmp = mBitmap;
         try {

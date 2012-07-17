@@ -1,6 +1,12 @@
 package cvg.sfmPipeline.calibration;
 
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -17,7 +23,6 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SubMenu;
@@ -34,7 +39,6 @@ public class CalibrationActivity extends Activity{
     //--   App State
     private boolean mIsCalibrated = false;
     private boolean mCalibImagesStarted = false;
-    
     //--   UI elements
     private CameraView mView; 
     private static TextView mTextNoImgs;
@@ -71,6 +75,9 @@ public class CalibrationActivity extends Activity{
 	private int checkH = 6;
 	private int checkW = 9;
 	
+	public static final int MODE_CHECKERBOARD = 0;
+	public static final int MODE_VANISHPT = 1;
+	public static int globalMode = MODE_CHECKERBOARD;
 	//--   Sensor readings buffers
     public static float[] latestSensor;
     public static float[] beforeSensor;
@@ -84,6 +91,8 @@ public class CalibrationActivity extends Activity{
 	protected void onPause() {
         Log.i(TAG, "onPause");
 		super.onPause();
+		mSensorManager.unregisterListener(mSensorEventListener);
+		mSensorEventListener = null;
 		mView.releaseCamera();
 	}
 
@@ -92,6 +101,8 @@ public class CalibrationActivity extends Activity{
         Log.i(TAG, "onResume");
         onCreate(null);
 		super.onResume();
+		doSensorList(true);// always gravity by default
+		chooseMode();
 		if( !mView.openCamera() ) {
 			AlertDialog ad = new AlertDialog.Builder(this).create();  
 			ad.setMessage("Fatal error: can't open camera!");   
@@ -99,7 +110,7 @@ public class CalibrationActivity extends Activity{
 		}
 	}
 	
-	public void clickGrabImage(View view){
+	public void clickGrabImage(View view){	
 		mCalibImagesStarted = true;
 		setEnabledUI(false);
 		if(!mIsCalibrated){
@@ -107,7 +118,6 @@ public class CalibrationActivity extends Activity{
 			mView.grabAndProcess();
 		}else
 		{	
-			Log.i(TAG,"Now instead, save the image and sensor values in SD");
 			mView.grabAndSave();
 			mButtonCalib.setEnabled(false);
 		}
@@ -118,6 +128,8 @@ public class CalibrationActivity extends Activity{
 			(Toast.makeText(this, "Please take 3 images of a calibration pattern first!", Toast.LENGTH_SHORT)).show();
 			return;
 		}
+		
+
 		if(mView.calibrationObject.getNumberOfImages() < 3){
 			(Toast.makeText(this, "Please take 3 images of a calibration pattern first!", Toast.LENGTH_SHORT)).show();
 			return;
@@ -128,7 +140,13 @@ public class CalibrationActivity extends Activity{
 		mView.calibrationObject.mutualCalibrate();
 		double[] data1 = new double[9];
 		mView.calibrationObject.getRotationMatrix(data1);
-		displayMatrix("Rot CAM2IMU", data1);
+		if(globalMode == MODE_CHECKERBOARD){
+			displayMatrix("Rot CAM2IMU", data1);
+			saveMatrix(data1, "CAM2IMU");
+		}else{
+			displayMatrix("Rot CAM2IMU", data1);
+			saveMatrix(data1, "CAM2IMU");
+		}
 		mIsCalibrated = true;
 		setEnabledUI(true);
 		mButtonCalib.setEnabled(false);
@@ -136,6 +154,24 @@ public class CalibrationActivity extends Activity{
 		
 	}
 	
+	private void saveMatrix(double[] matrix, String filename) {
+		File matFile = new File(mView.getDataFolder() + String.format("/%s.txt", filename));
+		String str = String.format("%f  %f  %f\n%f  %f  %f\n%f  %f  %f", 
+				matrix[0], matrix[1], matrix[2], matrix[3], matrix[4], matrix[5], 
+				matrix[6], matrix[7], matrix[8] );
+        try {
+			BufferedWriter writer = new BufferedWriter(new FileWriter(matFile));
+			writer.write(str);
+			writer.flush();
+			writer.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+	}
+
 	public static void updateUI(int what, String noIms, SensorEvent event){
 		switch (what){
 			case CalibrationActivity.IMAGES_TXT:
@@ -155,6 +191,8 @@ public class CalibrationActivity extends Activity{
 		}
 		
 	}
+	
+
 	
 	public static void displayMatrix(String label, double[] vals){
 		mMatLabel.setText(label);
@@ -190,15 +228,11 @@ public class CalibrationActivity extends Activity{
         mButtonCalib = (Button)findViewById(R.id.calibrate);
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         sensors = mSensorManager.getSensorList(Sensor.TYPE_ALL);
+       
         mTextRoll = (TextView)findViewById(R.id.roll);
         mTextPitch = (TextView)findViewById(R.id.pitch);
         mTextYaw = (TextView)findViewById(R.id.yaw);
-        doSensorList();
-        for (Sensor sensor : sensors) {
-			if(!logList.contains(sensor.getType()) || sensor.getVendor().equalsIgnoreCase("Google Inc."))
-				continue;
-			mSensorManager.registerListener(mSensorEventListener, sensor, SensorManager.SENSOR_DELAY_FASTEST);
-		}
+        
         
         mMatLabel = (TextView) findViewById(R.id.matrixLabel);
         mMat_1_1 = (TextView) findViewById(R.id.matrix_1_1);
@@ -210,10 +244,38 @@ public class CalibrationActivity extends Activity{
         mMat_3_1 = (TextView) findViewById(R.id.matrix_3_1);
         mMat_3_2 = (TextView) findViewById(R.id.matrix_3_2);
         mMat_3_3 = (TextView) findViewById(R.id.matrix_3_3);
-       
+        
+        
         
     }
-  //--   Sensor event handlers
+  
+    private void chooseMode() {
+  	AlertDialog.Builder alertBuilder = new AlertDialog.Builder(this);
+  	alertBuilder.setTitle("Please Choose the mode of operation.");
+
+  	alertBuilder
+  		.setCancelable(false)
+  		.setPositiveButton("Checkerboard", new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					globalMode = MODE_CHECKERBOARD;
+					dialog.dismiss();
+				}
+		})
+		.setNegativeButton("Vanishing Point", new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				globalMode = MODE_VANISHPT;
+				dialog.dismiss();
+			}
+		});
+  	AlertDialog alert = alertBuilder.create();
+  	alert.show(); 
+		
+	}
+    
+    
+	//--   Sensor event handlers
     private SensorEventListener mSensorEventListener = new SensorEventListener() {
         @Override
         public void onSensorChanged(SensorEvent event) {
@@ -267,6 +329,7 @@ public class CalibrationActivity extends Activity{
 		        if (item.isChecked()) item.setChecked(false);
 				else item.setChecked(true);
 		        mView.MODE_USEONLYIMU = item.isChecked();
+		        doSensorList(item.isChecked());
         		return true;
         	case CHESS_HORIZ:
 		        if (item.isChecked()) item.setChecked(false);
@@ -292,7 +355,7 @@ public class CalibrationActivity extends Activity{
     private void changeCheckerboard() {
     	AlertDialog.Builder alertBuilder = new AlertDialog.Builder(this);
     	View twoEdits = getLayoutInflater().inflate(R.layout.checkersize, null);
-    	alertBuilder.setTitle("Change checkerboard size (rowsxcols");
+    	alertBuilder.setTitle("Change checkerboard size (rowsxcols)");
     	alertBuilder.setView(twoEdits);
     	
     	final EditText mEditCols = (EditText)twoEdits.findViewById(R.id.checkerCols);
@@ -317,9 +380,11 @@ public class CalibrationActivity extends Activity{
     	alert.show();    		
 	}
 
+    
 	@Override
     public boolean onPrepareOptionsMenu(Menu menu){
     	super.onPrepareOptionsMenu(menu);
+    	if(globalMode == MODE_VANISHPT) closeOptionsMenu();
     	if (mCalibImagesStarted){
     		for (int i = 0; i < menu.size(); i++) {
 				menu.getItem(i).setEnabled(false);
@@ -330,16 +395,26 @@ public class CalibrationActivity extends Activity{
 		return true;
     }
     
-    private void doSensorList(){
+    private void doSensorList(boolean onlyIMU){
+    	logList = null;
     	logList = new ArrayList<Integer>();
-//	    logList.add(Sensor.TYPE_ACCELEROMETER);
-//	    logList.add(Sensor.TYPE_GYROSCOPE);
-//	    logList.add(Sensor.TYPE_MAGNETIC_FIELD);
-//	    logList.add(Sensor.TYPE_LINEAR_ACCELERATION);
-//	    logList.add(Sensor.TYPE_ORIENTATION);
-	    logList.add(Sensor.TYPE_GRAVITY);
-//	    logList.add(Sensor.TYPE_PRESSURE);
-//    	logList.add(Sensor.TYPE_ROTATION_VECTOR);
+    	if (onlyIMU){
+    		logList.add(Sensor.TYPE_GRAVITY);
+    		Log.i(TAG,"Gravity");
+    	}else{
+    		Log.i(TAG,"Rotation");
+    		logList.add(Sensor.TYPE_ROTATION_VECTOR);
+    	}
+    	mSensorManager = null;
+    	mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+    	
+    	mSensorManager.unregisterListener(mSensorEventListener);
+        for (Sensor sensor : sensors) {
+			if(!logList.contains(sensor.getType()) || sensor.getVendor().equalsIgnoreCase("Google Inc."))
+				continue;
+			mSensorManager.registerListener(mSensorEventListener, sensor, SensorManager.SENSOR_DELAY_FASTEST);
+		}
+    	
     }
     
     private static String numberDisplayFormatter(float value) {
@@ -360,10 +435,10 @@ public class CalibrationActivity extends Activity{
         if (value >= 0) {
             displayedText = " " + displayedText;
         }
-        if (displayedText.length() > 5) {
-            displayedText = displayedText.substring(0, 5);
+        if (displayedText.length() > 6) {
+            displayedText = displayedText.substring(0, 6);
         }
-        while (displayedText.length() < 5) {
+        while (displayedText.length() < 6) {
             displayedText = displayedText + " ";
         }
         return displayedText;
@@ -395,10 +470,15 @@ public class CalibrationActivity extends Activity{
         	return super.onKeyDown(KeyEvent.KEYCODE_BACK, event);
         }
         if (keyCode == KeyEvent.KEYCODE_MENU){
-        	return super.onKeyDown(KeyEvent.KEYCODE_MENU, event);
+        	if(globalMode == MODE_VANISHPT)
+        		super.onKeyDown(KeyEvent.KEYCODE_1, event);
+        	else{
+        		super.onKeyDown(KeyEvent.KEYCODE_MENU, event);
+        		return false;
+        	}
         }
         
-        return super.onKeyDown(KeyEvent.KEYCODE_MENU, event);
+        return true;
     }
     
 }
