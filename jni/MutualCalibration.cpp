@@ -10,6 +10,7 @@
 #include "CataCameraParameters.h"
 #include "Chessboard.h"
 #include "Cas1DVanishingPoint.h"
+#include "RansacVanishingPoint.h"
 #include "MutualCalibration.h"
 
 void showMat(cv::Mat R, const char* s)
@@ -140,7 +141,7 @@ MutualCalibration::tryAddingChessboardImage(cv::Mat & inputImage, cv::Mat & outp
 bool
 MutualCalibration::tryAddingVanishingPointImage(cv::Mat & inputImage, cv::Mat & outputImage)
 {
-	Cas1DVanishingPoint vanishingPoint(inputImage); 
+/*	Cas1DVanishingPoint vanishingPoint(inputImage); 
 	vanishingPoint.findOrthogonalVanishingPts(); 
 	vanishingPoint.getSketch().copyTo(outputImage); 
 	if (vanishingPoint.threeDetected())
@@ -164,6 +165,20 @@ MutualCalibration::tryAddingVanishingPointImage(cv::Mat & inputImage, cv::Mat & 
 			mgsCamera.push_back(R.col(idx) * 1.0); 
 		else mgsCamera.push_back(R.col(idx) * -1.0); 
 
+		mVanishingPointImages++; 
+		return true; 
+	}
+	else return false; 
+*/
+	RansacVanishingPoint vanishingPoint(inputImage); 
+	vanishingPoint.findOrthogonalVanishingPts(); 
+	vanishingPoint.getSketch().copyTo(outputImage); 
+	if (vanishingPoint.orthogonalityDetected())
+	{
+		cv::Mat R = vanishingPoint.getRotation(); 
+		__android_log_print(
+				ANDROID_LOG_INFO, "g", "%lf, %lf, %lf", R.at<double>(0, 2), R.at<double>(1, 2), R.at<double>(2, 2));
+		mgsCamera.push_back(R.col(2) * 1.0); 
 		mVanishingPointImages++; 
 		return true; 
 	}
