@@ -60,7 +60,7 @@ public class CameraView extends AbstractCameraView {
 		Log.i(TAG,checkerRows + ", " + checkerCols);
 		if(calibrationObject == null)
 		calibrationObject = new MutualCalibration(getFrameHeight(), getFrameWidth(), checkerRows, 
-				checkerCols, MODE_USEOPENCVCORNER, MODE_OPENCVCALIB, MODE_USEONLYIMU, MODE_CHESSBHORZ, MODE_USERANSCA);
+				checkerCols, MODE_USEOPENCVCORNER, MODE_USEONLYIMU, MODE_USERANSCA);
 		super.grabAndProcess();
 	}
 	

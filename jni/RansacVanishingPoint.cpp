@@ -95,7 +95,9 @@ RansacVanishingPoint::getSketch() const
 		for (size_t i = 0; i < mOrthogonalVanishingPts.size(); i++)
 		{
 			cv::Point2f v; 
-			v = mOrthogonalVanishingPts[i];  
+			v = mOrthogonalVanishingPts[i];
+			if (hypot(v.x, v.y) > hypot(m.rows, m.cols))
+				v *= hypot(m.rows, m.cols) / hypot(v.x, v.y);
 			cv::line(m, cv::Point(m.cols/2, m.rows/2), 
 					cv::Point(v.x + m.cols/2, v.y + m.rows/2), cv::Scalar(255, 255, 0), 3, 8);
 		}
@@ -157,7 +159,7 @@ RansacVanishingPoint::selectOrthogonalVanishingPts() const
 					min_err = error; 
 				}
 			}
-	if (min_err < 0.1) return triplet; 
+	if (min_err < 0.05) return triplet;
 	else return std::vector<cv::Point2f>(); 
 }
 
@@ -249,7 +251,7 @@ RansacVanishingPoint::detectLines()
 	int blurRadius = 1.5 / 800 * hypot(mImage.cols, mImage.rows); 
 	float min_length = 30.0f / 800 * hypot(mImage.cols, mImage.rows); 
 	int min_vote = 30.0 / 800 * hypot(mImage.cols, mImage.rows); 
-//	std::cout << blurRadius << std::endl; 
+
 	cv::Mat blured; 
 
 	cv::GaussianBlur(mImage, blured, cv::Size(2 * blurRadius + 1, 2 * blurRadius + 1), blurRadius); 
@@ -258,17 +260,6 @@ RansacVanishingPoint::detectLines()
 	cv::Mat edge; 
 	cv::Canny(blured, edge, 50, 100, 3); 
 	cv::HoughLinesP(edge, mLines, 1, CV_PI/180, min_vote, min_length, 2);
-/*	cv::namedWindow("blured"); 
-	cv::imshow("blured", edge); 
-	cv::waitKey(); 
-*/
-/*	for (size_t i = 0; i < mLines.size(); i++)
-	{
-		cv::line(mSketch, cv::Point2f(mLines[i][0], mLines[i][1]), cv::Point2f(mLines[i][2], mLines[i][3]), cv::Scalar(0, 0, 244), 3, 8); 
-	}
-	cv::namedWindow("line"); 
-	cv::imshow("line", mSketch); 
-	cv::waitKey(); */
 }
 
 std::vector<size_t>
@@ -292,38 +283,6 @@ RansacVanishingPoint::randPerm(size_t n) const
 cv::Point2f 
 RansacVanishingPoint::intersectLines(const std::vector<cv::Vec4i> & lines) const
 {
-/*	cv::Mat N(std::max((int)lines.size(), 3), 3, CV_64F); 
-	for (size_t i = 0; i < lines.size(); i++)
-	{
-		cv::Mat n; 
-		// OpenCV solveZ cannot solve 2x3 matrix correctly. 
-		// This bug seems fixed after r8827, Jun 28, 2012. 
-		// Add an extra row to X to make 3x3 matrix for this bug. 
-		cv::Mat X(3, 3, CV_64F); 
-		X.at<double>(0, 0) = lines[i][0]; 
-		X.at<double>(0, 1) = lines[i][1]; 
-		X.at<double>(0, 2) = 501.0; 
-		X.at<double>(1, 0) = lines[i][2]; 
-		X.at<double>(1, 1) = lines[i][3]; 
-		X.at<double>(1, 2) = 501.0; 
-		X.row(1).copyTo(X.row(2)); 
-
-		cv::SVD::solveZ(X, n); 
-		N.row(i) = n.t() * 1.0;  
-//		std::cout << "X=" << X << std::endl; 
-//		std::cout << "X=" << n << std::endl; 
-	}
-	if (lines.size() < 3)
-		N.row(2).copyTo(N.row(2)); 
-	cv::Mat v; 
-//	std::cout << "N = " << N << std::endl; 
-	cv::SVD::solveZ(N, v); 
-	cv::Vec3f vec; 
-	vec[0] = v.at<double>(0); 
-	vec[1] = v.at<double>(1); 
-	vec[2] = v.at<double>(2); 
-	return vec; 
-*/
 	cv::Mat A = cv::Mat::zeros(2, 2, CV_64F); 
 	cv::Mat B = cv::Mat::zeros(2, 1, CV_64F); 
 	for (size_t i = 0; i < lines.size(); i++)
@@ -351,14 +310,13 @@ RansacVanishingPoint::sampleVanishingPt(const std::vector<cv::Vec4i> & lines) co
 	std::vector<cv::Vec4i> sampleLines; 
 	sampleLines.push_back(lines[perm[0]]); 
 	sampleLines.push_back(lines[perm[1]]); 
-//	showLines(sampleLines); 
+
 	return intersectLines(sampleLines); 
 }
 
 float 
 RansacVanishingPoint::distance(cv::Point2f pt, cv::Vec4f line) const
 {
-//	std::cout << cv::Mat(line)  << std::endl; 
 	float mid_x = 0.5f * (line[0] + line[2]); 
 	float mid_y = 0.5f * (line[1] + line[3]); 
 	
@@ -410,8 +368,6 @@ RansacVanishingPoint::ransac2Lines(const std::vector<cv::Vec4i> & lines) const
 	{
 		cv::Point2f guess = sampleVanishingPt(lines); 
 		size_t inliers = linesSupport(guess, lines).size(); 
-//		std::cout << cv::Mat(guess) << inliers << std::endl; 
-//		showLines(linesSupport(guess)); 
 		if (inliers > max_inliers)
 		{
 			max_inliers = inliers; 
@@ -421,13 +377,8 @@ RansacVanishingPoint::ransac2Lines(const std::vector<cv::Vec4i> & lines) const
 			k = log(1.0f - p) / log(1.0f - r * r); 
 			it = 0; 
 		}
-//		std::cout << k << " " << it  << std::endl; 
 		it++; 
 	}
-//	std::cout << "==========" << cv::Mat(vanishingPt) << "  " << max_inliers << std::endl; 
-//	showLines(linesSupport(vanishingPt, lines)); 
-//	vanishingPt = intersectLines(linesSupport(vanishingPt, lines)); 
-//	std::cout << "=====" << cv::Mat(vanishingPt) << "  " << max_inliers << std::endl; 
 
 	return vanishingPt; 
 

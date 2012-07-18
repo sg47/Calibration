@@ -137,9 +137,26 @@ public class CalibrationActivity extends Activity{
 		
 		setEnabledUI(false);
 		mView.calibrationObject.calibrateCamera();
-		mView.calibrationObject.mutualCalibrate();
+		boolean wellPosed = mView.calibrationObject.mutualCalibrate();
+		
+		if (!wellPosed)
+		{
+			AlertDialog.Builder alertBuilder = new AlertDialog.Builder(this);
+        	alertBuilder.setTitle("Calibration failed, possibly due to ill-posed captured data. Try capturing data diversely. ");
+        	alertBuilder
+        		.setCancelable(false)
+        		.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						finish();
+					}
+				});
+        	AlertDialog alert = alertBuilder.create();
+        	alert.show();
+		}
+		
 		double[] data1 = new double[9];
-		mView.calibrationObject.getRotationMatrix(data1);
+		mView.calibrationObject.getRotationMatrix(data1); 
 		if(globalMode == MODE_CHECKERBOARD){
 			displayMatrix("Rot CAM2IMU", data1);
 			saveMatrix(data1, "CAM2IMU");

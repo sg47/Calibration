@@ -17,9 +17,9 @@ class MutualCalibration
 	std::vector<std::vector<cv::Point2f> > mImagePoints; 
 	
 	vcharge::CataCameraParameters mCameraParam; 
-	std::vector<cv::Mat> mRsCamera, mtsCamera, mgsCamera; 
+	std::vector<cv::Mat> mRsCamera, mtsCamera; //, mgsCamera;
 	std::vector<float> mfsCamera; 
-	std::vector<cv::Mat> mRsIMU, mgsIMU; 
+	std::vector<cv::Mat> mgsIMU; //mRsIMU,
 
 	cv::Mat mCamera2IMU; 
 
@@ -39,19 +39,21 @@ protected:
 public:
 
 	MutualCalibration(size_t heightImage, size_t widthImage, size_t heightBoard, size_t widthBoard, 
-					  bool useOpenCVCorner = false, bool useOpenCVCalibration = true, 
-					  bool useOnlyIMUGravity = false, bool useChessboardHorizontal = true, 
-					  bool useRANSAC = false); 
+					  bool useOpenCVCorner = false,
+					  bool useOnlyIMUGravity = false,
+					  bool useRANSAC = false);
 	bool tryAddingChessboardImage(cv::Mat & inputImage, cv::Mat & outputImage); 
 	bool tryAddingVanishingPointImage(cv::Mat & inputImage, cv::Mat & outputImage); 
 	void addFullIMURotationByQuaternion(double r0, double r1, double r2); 
 	void addIMUGravityVector(double g1, double g2, double g3); 
 	size_t getNumberOfImages() const; 
 	void getRotationMatrix(double p[]) const; 
-	std::vector<size_t> randPerm(size_t n) const; 
-	void calibrateCamera(); 
-	void ransacMutualCalibrateWithHorizontalChessboard(); 
-	void lsMutualCalibrateWithHorizontalChessboard(); 
-	void mutualCalibrate(); 
-
+	void calibrateCamera();
+	bool mutualCalibrate();
+protected:
+	std::vector<size_t> randPerm(size_t n) const;
+	cv::Mat createAlignmentMatrix() const;
+	std::vector<cv::Mat> findCameraGravity(const std::vector<cv::Mat> & cameraRotations, const std::vector<cv::Mat> & imuGravity) const;
+	bool lsMutualCalibrateWithHorizontalChessboard(const std::vector<cv::Mat> & cameraGravity, const std::vector<cv::Mat> & imuGravity, cv::Mat & outputRotation) const;
+	bool ransacMutualCalibrateWithHorizontalChessboard(const std::vector<cv::Mat> & cameraGravity, const std::vector<cv::Mat> & imuGravity, cv::Mat & outputRotation) const;
 }; 

@@ -1,3 +1,4 @@
+#include <cassert>
 #include <algorithm>
 #include <vector>
 #include <opencv2/highgui/highgui.hpp>
@@ -27,26 +28,25 @@ void showMat(cv::Mat R, const char* s)
 
 
 MutualCalibration::MutualCalibration(size_t heightImage, size_t widthImage, size_t heightBoard, size_t widthBoard, 
-									 bool useOpenCVCorner, bool useOpenCVCalibration, 
-									 bool useOnlyIMUGravity, bool useChessboardHorizontal, 
-									 bool useRANSAC)
+									 bool useOpenCVCorner, bool useOnlyIMUGravity, bool useRANSAC)
 	: mImageSize(cv::Size(widthImage, heightImage)), 
 	  mBoardSize(cv::Size(widthBoard, heightBoard)), 
-	  mUseOpenCVCorner(useOpenCVCorner), 
-	  mUseOpenCVCalibration(useOpenCVCalibration), 
-	  mUseOnlyIMUGravity(useOnlyIMUGravity), 
-	  mUseChessboardHorizontal(useChessboardHorizontal), 
-	  mUseRANSAC(useRANSAC), 
+	  mUseOpenCVCorner(useOpenCVCorner),
+	  mUseOnlyIMUGravity(useOnlyIMUGravity),
+	  mUseOpenCVCalibration(false),
+	  mUseChessboardHorizontal(false),
+	  mUseRANSAC(useRANSAC),
 	  mChessboardMeasured(false), 
 	  mChessboardImages(0), 
-	  mVanishingPointImages(0)
+	  mVanishingPointImages(0),
+	  mSquareSize(1.0f)
 {
-	mSquareSize = 1.0f; 
 }
 
 size_t 
 MutualCalibration::getNumberOfImages() const
 {
+	assert(mChessboardImages == 0 || mVanishingPointImages == 0);
 	return std::max(mChessboardImages, mVanishingPointImages); 
 }
 
@@ -81,25 +81,18 @@ MutualCalibration::randPerm(size_t n) const
 		perm[i] = t;
 	}
 
-//	__android_log_print(
-//				ANDROID_LOG_INFO, "perm", "%d, %d, %d", perm[0], perm[1], perm[2]);
-
 	return perm; 
 }
 
 void 
 MutualCalibration::addFullIMURotationByQuaternion(double r0, double r1, double r2)
 {
+	assert(!mUseOnlyIMUGravity);
 	cv::Mat rvec(3, 1, CV_64F); 
 	rvec.at<double>(0) = r0; 
 	rvec.at<double>(1) = r1; 
 	rvec.at<double>(2) = r2; 
 	double a = cv::norm(rvec); 
-
-	__android_log_print(
-			ANDROID_LOG_INFO, "full", "%lf, %lf, %lf -- a = %lf", r0, r1, r2, a);
-
-
 
 	a = 2 * asin(a); 
 	rvec = rvec / cv::norm(rvec) * a; 
@@ -108,12 +101,13 @@ MutualCalibration::addFullIMURotationByQuaternion(double r0, double r1, double r
 	cv::Rodrigues(rvec, RIMU); 
 
 	RIMU = RIMU.t(); 
-	mRsIMU.push_back(RIMU * 1.0); 
+	mgsIMU.push_back(RIMU.col(2) * 1.0);
 }
 
 void
 MutualCalibration::addIMUGravityVector(double g1, double g2, double g3)
 {
+	assert(mUseOnlyIMUGravity);
 	cv::Mat g(3, 1, CV_64F); 
 	g.at<double>(0) = g1; 
 	g.at<double>(1) = g2; 
@@ -141,35 +135,6 @@ MutualCalibration::tryAddingChessboardImage(cv::Mat & inputImage, cv::Mat & outp
 bool
 MutualCalibration::tryAddingVanishingPointImage(cv::Mat & inputImage, cv::Mat & outputImage)
 {
-/*	Cas1DVanishingPoint vanishingPoint(inputImage); 
-	vanishingPoint.findOrthogonalVanishingPts(); 
-	vanishingPoint.getSketch().copyTo(outputImage); 
-	if (vanishingPoint.threeDetected())
-	{
-		cv::Mat R = vanishingPoint.getRotation(); 
-		size_t idx = 0; 
-		for (size_t i = 0; i < 3; i++)
-		{
-			__android_log_print(
-				ANDROID_LOG_INFO, "asdf", "%lf, %lf", fabs(R.at<double>(1, idx)), fabs(R.at<double>(1, i)));
-		
-			if (fabs(R.at<double>(1, idx) < fabs(R.at<double>(1, i))) )
-			{
-		
-				idx = i; 
-			}
-		}
-		__android_log_print(
-				ANDROID_LOG_INFO, "g", "%lf, %lf, %lf", R.at<double>(0, idx), R.at<double>(1, idx), R.at<double>(2, idx));
-		if (R.at<double>(1, idx) > 0) 
-			mgsCamera.push_back(R.col(idx) * 1.0); 
-		else mgsCamera.push_back(R.col(idx) * -1.0); 
-
-		mVanishingPointImages++; 
-		return true; 
-	}
-	else return false; 
-*/
 	RansacVanishingPoint vanishingPoint(inputImage); 
 	vanishingPoint.findOrthogonalVanishingPts(); 
 	vanishingPoint.getSketch().copyTo(outputImage); 
@@ -178,14 +143,6 @@ MutualCalibration::tryAddingVanishingPointImage(cv::Mat & inputImage, cv::Mat & 
 		cv::Mat R = vanishingPoint.getRotation(); 
 		std::vector<cv::Point2f> ovpts = vanishingPoint.selectOrthogonalVanishingPts(); 
 		
-		__android_log_print(
-				ANDROID_LOG_INFO, "vp0", "%lf, %lf", ovpts[0].x, ovpts[0].y); 
-		__android_log_print(
-				ANDROID_LOG_INFO, "vp1", "%lf, %lf", ovpts[1].x, ovpts[1].y); 
-		__android_log_print(
-				ANDROID_LOG_INFO, "vp2", "%lf, %lf", ovpts[2].x, ovpts[2].y); 
-
-//		mgsCamera.push_back(-R.col(2) * 1.0); 
 		mRsCamera.push_back(R * 1.0); 
 		mVanishingPointImages++; 
 		return true; 
@@ -217,200 +174,139 @@ MutualCalibration::calibrateCamera()
 	if (1)
 	{	
 		cv::calibrateCamera(objectPoints, mImagePoints, mImageSize, cameraMatrix, distCoeffs, rvecs, mtsCamera); 
-			__android_log_print(
-		ANDROID_LOG_INFO, "focal", "%lf", cameraMatrix.at<double>(0, 0));
+
 		for (size_t i = 0; i < rvecs.size(); i++)
 		{
 			cv::Mat RCamera; 
 			cv::Rodrigues(rvecs[i], RCamera); 
 			mRsCamera.push_back(RCamera * 1.0); 
-//			mgsCamera.push_back(RCamera.col(2) * 1.0);
 		}
 	}
-		
 }
 
-void 
-MutualCalibration::lsMutualCalibrateWithHorizontalChessboard()
+cv::Mat
+MutualCalibration::createAlignmentMatrix() const
 {
-	cv::Mat ideal(3, 3, CV_64F); 
-	ideal.at<double>(0, 0) = 0; 
-	ideal.at<double>(0, 1) = -1; 
-	ideal.at<double>(0, 2) = 0; 
-	ideal.at<double>(1, 0) = -1; 
-	ideal.at<double>(1, 1) = 0; 
-	ideal.at<double>(1, 2) = 0; 
-	ideal.at<double>(2, 0) = 0; 
-	ideal.at<double>(2, 1) = 0; 
-	ideal.at<double>(2, 2) = -1; 
-	__android_log_print(
-	ANDROID_LOG_INFO, "ideal", "set %d", mRsCamera.size()); 
-	for (size_t i = 0; i < mRsCamera.size(); i++)
+	cv::Mat ideal(3, 3, CV_64F);
+	ideal.at<double>(0, 0) = 0;
+	ideal.at<double>(0, 1) = -1;
+	ideal.at<double>(0, 2) = 0;
+	ideal.at<double>(1, 0) = -1;
+	ideal.at<double>(1, 1) = 0;
+	ideal.at<double>(1, 2) = 0;
+	ideal.at<double>(2, 0) = 0;
+	ideal.at<double>(2, 1) = 0;
+	ideal.at<double>(2, 2) = -1;
+	return ideal * 1.0;
+}
+
+std::vector<cv::Mat>
+MutualCalibration::findCameraGravity(const std::vector<cv::Mat> & cameraRotations, const std::vector<cv::Mat> & imuGravity) const
+{
+	cv::Mat ideal = createAlignmentMatrix();
+	std::vector<cv::Mat> cameraGravity;
+	for (size_t i = 0; i < cameraRotations.size(); i++)
 	{
-		cv::Mat R_c2i = ideal * mRsCamera[i]; 
-		showMat(mRsCamera[i], "RCi"); 
-		showMat(R_c2i, "Rc2i"); 
+		cv::Mat R_c2i = ideal * cameraRotations[i];
 
-		cv::Mat gCamera = R_c2i.col(0) * 1.0;  
+		cv::Mat gCamera = R_c2i.col(0) * 1.0;
 
-		if (cv::norm(mgsIMU[i] + R_c2i.col(0)) < cv::norm(mgsIMU[i] - gCamera))
+		if (cv::norm(imuGravity[i] + R_c2i.col(0)) < cv::norm(imuGravity[i] - gCamera))
 			gCamera = -R_c2i.col(0) * 1.0;
 
-		if (cv::norm(mgsIMU[i] - R_c2i.col(1)) < cv::norm(mgsIMU[i] - gCamera))
+		if (cv::norm(imuGravity[i] - R_c2i.col(1)) < cv::norm(imuGravity[i] - gCamera))
 			gCamera = R_c2i.col(1) * 1.0;
 
-		if (cv::norm(mgsIMU[i] + R_c2i.col(1)) < cv::norm(mgsIMU[i] - gCamera))
-			gCamera = -R_c2i.col(1) * 1.0; 
+		if (cv::norm(imuGravity[i] + R_c2i.col(1)) < cv::norm(imuGravity[i] - gCamera))
+			gCamera = -R_c2i.col(1) * 1.0;
 
-		if (cv::norm(mgsIMU[i] - R_c2i.col(2)) < cv::norm(mgsIMU[i] - gCamera))
-			gCamera = R_c2i.col(2) * 1.0; 
+		if (cv::norm(imuGravity[i] - R_c2i.col(2)) < cv::norm(imuGravity[i] - gCamera))
+			gCamera = R_c2i.col(2) * 1.0;
 
-		if (cv::norm(mgsIMU[i] + R_c2i.col(2)) < cv::norm(mgsIMU[i] - gCamera))
-			gCamera = -R_c2i.col(2) * 1.0; 
+		if (cv::norm(imuGravity[i] + R_c2i.col(2)) < cv::norm(imuGravity[i] - gCamera))
+			gCamera = -R_c2i.col(2) * 1.0;
 
-		mgsCamera.push_back(ideal.t() * gCamera * 1.0);
-	
-		__android_log_print(ANDROID_LOG_INFO, "mg", "gi = %lf, %lf, %lf, gc = %lf, %lf, %lf", 
-				mgsIMU[i].at<double>(0), mgsIMU[i].at<double>(1), mgsIMU[i].at<double>(2), 
-				mgsCamera[i].at<double>(0), mgsCamera[i].at<double>(1), mgsCamera[i].at<double>(2) ); 
+		cameraGravity.push_back(ideal.t() * gCamera * 1.0);
 	}
+	return cameraGravity;
 
+}
 
-	cv::Mat S(3, mgsCamera.size(), CV_64F);
-	cv::Mat T(3, mgsCamera.size(), CV_64F);
-	__android_log_print(
-				ANDROID_LOG_INFO, "ls", "%d", mgsCamera.size());
-	for (size_t i = 0; i < mgsCamera.size(); i++)
+bool
+MutualCalibration::lsMutualCalibrateWithHorizontalChessboard(const std::vector<cv::Mat> & cameraGravity, const std::vector<cv::Mat> & imuGravity, cv::Mat & ouputRotation) const
+{
+
+	cv::Mat S(3, cameraGravity.size(), CV_64F);
+	cv::Mat T(3, cameraGravity.size(), CV_64F);
+	for (size_t i = 0; i < cameraGravity.size(); i++)
 	{
-		if (mUseOnlyIMUGravity)
-		{
-			S.col(i) = mgsCamera[i] * 1.0;
-			T.col(i) = mgsIMU[i] * 1.0; 
-			__android_log_print(
-			ANDROID_LOG_INFO, "ls", "%d %d", S.cols, S.rows);
-		}
-		else
-		{
-			S.col(i) = mgsCamera[i] * 1.0; 
-			T.col(i) = mRsIMU[i].col(2) * 1.0; 
-		}
+		S.col(i) = cameraGravity[i] * 1.0;
+		T.col(i) = imuGravity[i] * 1.0;
 	}
-__android_log_print(
-			ANDROID_LOG_INFO, "R", "%d %d", S.cols, S.rows); 
-
-	showMat(S, "S"); 
-	showMat(T, "T");
 
 	// Kabsch algorihm from wikipedia
 	cv::Mat A = T * S.t();
-	cv::Mat D, U, Vt; 
+	cv::Mat D, U, Vt;
 	cv::SVD::compute(A, D, U, Vt);
-	cv::Mat R = U * Vt; 			
-	__android_log_print(
+	cv::Mat R = U * Vt;
+/*	__android_log_print(
 			ANDROID_LOG_INFO, "R", "%lf %lf %lf \n %lf %lf %lf \n %lf %lf %lf\n",
 			R.at<double>(0, 0), R.at<double>(0, 1), R.at<double>(0, 2),
 			R.at<double>(1, 0), R.at<double>(1, 1), R.at<double>(1, 2),
-			R.at<double>(2, 0), R.at<double>(2, 1), R.at<double>(2, 2));
-
-	R.copyTo(mCamera2IMU); 
+			R.at<double>(2, 0), R.at<double>(2, 1), R.at<double>(2, 2));*/
+	R.copyTo(ouputRotation);
+	if (D.at<double>(1) / D.at<double>(0) < 0.01) return false;
+	else return true;
 }
 
-void 
-MutualCalibration::ransacMutualCalibrateWithHorizontalChessboard()
+bool
+MutualCalibration::ransacMutualCalibrateWithHorizontalChessboard(const std::vector<cv::Mat> & cameraGravity, const std::vector<cv::Mat> & imuGravity, cv::Mat & outputRotation) const
 {
-	if (!mUseOnlyIMUGravity && mRsCamera.size() != mRsIMU.size()) exit(-1); 
-	if (mUseOnlyIMUGravity && mRsCamera.size() != mgsIMU.size()) exit(-1); 
-
 	// RANSAC
-	size_t it = 0; 
-	size_t max_iter = 20;
-	cv::Mat R_best; 
-	size_t max_inliers = 0; 
-	
+	size_t it = 0;
+	size_t max_iter = 10;
+	cv::Mat R_best;
+	size_t max_inliers = 0;
+
 	while (it < max_iter)
 	{
 		std::vector<size_t> perm = randPerm(mRsCamera.size());
-		cv::Mat S(3, 3, CV_64F); 
-		cv::Mat T(3, 3, CV_64F); 
-		if (mUseOnlyIMUGravity)
-		{	
-			// R * S = T
-			// S = R_c * [0; 0; -1] 
-			// T = g
-			S.col(0) = mgsCamera[perm[0]] * 1.0; 
-			S.col(1) = mgsCamera[perm[1]] * 1.0; 
-			S.col(2) = mgsCamera[perm[2]] * 1.0; 
-			T.col(0) = mgsIMU[perm[0]] * 1.0; 
-			T.col(1) = mgsIMU[perm[1]] * 1.0; 
-			T.col(2) = mgsIMU[perm[2]] * 1.0;
-		}
-		else
+
+		std::vector<cv::Mat> sampledCameraGravity, sampledImuGravity;
+		for (size_t i = 0; i < 3; i++)
 		{
-			// R * S = T
-			// S = R_c * [0; 0; 1]
-			// T = R_i * [0; 0; 1]
-			S.col(0) = mgsCamera[perm[0]] * 1.0; 
-			S.col(1) = mgsCamera[perm[1]] * 1.0; 
-			S.col(2) = mgsCamera[perm[2]] * 1.0; 
-			T.col(0) = mRsIMU[perm[0]].col(2) * 1.0; 
-			T.col(1) = mRsIMU[perm[1]].col(2) * 1.0; 
-			T.col(2) = mRsIMU[perm[2]].col(2) * 1.0; 
+			sampledCameraGravity.push_back(cameraGravity[perm[i]]);
+			sampledImuGravity.push_back(imuGravity[perm[i]]);
 		}
 
-		// Kabsch algorihm from wikipedia
-		cv::Mat A = T * S.t();
-		cv::Mat D, U, Vt; 
-		cv::SVD::compute(A, D, U, Vt);
-		cv::Mat R = U * Vt; 			
+		cv::Mat R;
+		bool wellPosed = lsMutualCalibrateWithHorizontalChessboard(sampledCameraGravity, sampledImuGravity, R);
+		if (!wellPosed) continue;
 
-		cv::Mat V(3, mRsCamera.size(), CV_64F); 
-		if (mUseOnlyIMUGravity)
-		{
-			for (size_t i = 0; i < mgsCamera.size(); i++)
-				V.col(i) = -mgsCamera[i] * 1.0; 
-		}
-		else
-		{
-			for (size_t i = 0; i < mgsCamera.size(); i++)
-				V.col(i) = mgsCamera[i] * 1.0; 
-		}
+		cv::Mat U(3, cameraGravity.size(), CV_64F);
+		for (size_t i = 0; i < cameraGravity.size(); i++)
+			U.col(i) = cameraGravity[i] * 1.0;
 
-		cv::Mat Vs = R * V; 
-		size_t inliers = 0; 
-		for (size_t i = 0; i < Vs.cols; i++)
+		cv::Mat V = R * U;
+		size_t inliers = 0;
+		for (size_t i = 0; i < V.cols; i++)
 		{
-			if (mUseOnlyIMUGravity)
-			{
-				if (cv::norm(Vs.col(i) - mgsIMU[i]) < 0.05) inliers++; 
-			}
-			else
-			{
-				if (cv::norm(Vs.col(i) - mRsIMU[i].col(2)) < 0.05) inliers++; 
-			}
+			__android_log_print(
+							ANDROID_LOG_INFO, "R_err", "%lf", cv::norm(V.col(i) - imuGravity[i]));
+			if (cv::norm(V.col(i) - imuGravity[i]) < 0.05) inliers++;
 		}
 		if (inliers > max_inliers)
 		{
-			R.copyTo(R_best); 
-			max_inliers = inliers; 
+			R.copyTo(R_best);
+			max_inliers = inliers;
 		}
 		it++;
 
-
 		__android_log_print(
-				ANDROID_LOG_INFO, "S", "%lf %lf \n %lf %lf \n %lf %lf ",
-				S.at<double>(0, 0), S.at<double>(0, 1), 
-				S.at<double>(1, 0), S.at<double>(1, 1), 
-				S.at<double>(2, 0), S.at<double>(2, 1)); 
-		__android_log_print(
-				ANDROID_LOG_INFO, "T", "%lf %lf \n %lf %lf \n %lf %lf ",
-				T.at<double>(0, 0), T.at<double>(0, 1), 
-				T.at<double>(1, 0), T.at<double>(1, 1), 
-				T.at<double>(2, 0), T.at<double>(2, 1)); 
-		__android_log_print(
-				ANDROID_LOG_INFO, "R", "%lf %lf %lf \n %lf %lf %lf \n %lf %lf %lf\n %d",
+				ANDROID_LOG_INFO, "R", "%lf %lf %lf \n %lf %lf %lf \n %lf %lf %lf\n %d %d",
 				R.at<double>(0, 0), R.at<double>(0, 1), R.at<double>(0, 2),
 				R.at<double>(1, 0), R.at<double>(1, 1), R.at<double>(1, 2),
-				R.at<double>(2, 0), R.at<double>(2, 1), R.at<double>(2, 2), inliers);
+				R.at<double>(2, 0), R.at<double>(2, 1), R.at<double>(2, 2), inliers, it);
 
 	}
 
@@ -420,19 +316,28 @@ MutualCalibration::ransacMutualCalibrateWithHorizontalChessboard()
 			R_best.at<double>(0, 0), R_best.at<double>(0, 1), R_best.at<double>(0, 2),
 			R_best.at<double>(1, 0), R_best.at<double>(1, 1), R_best.at<double>(1, 2),
 			R_best.at<double>(2, 0), R_best.at<double>(2, 1), R_best.at<double>(2, 2), max_inliers);
-	else 
+	else
 		__android_log_print(
-			ANDROID_LOG_INFO, "R_best", "wierd"); 
+			ANDROID_LOG_INFO, "R_best", "Weird");
 
-	R_best.copyTo(mCamera2IMU); 
+	R_best.copyTo(outputRotation);
+	return max_inliers >= 3;
 
 }
 
-void
+bool
 MutualCalibration::mutualCalibrate()
 {
+	std::vector<cv::Mat> cameraGravity = findCameraGravity(mRsCamera, mgsIMU);
+	bool wellPosed;
 	if (mUseRANSAC)
-		ransacMutualCalibrateWithHorizontalChessboard(); 
-	else 
-		lsMutualCalibrateWithHorizontalChessboard(); 
+	{
+		wellPosed = ransacMutualCalibrateWithHorizontalChessboard(cameraGravity, mgsIMU, mCamera2IMU);
+	}
+	else
+	{
+		wellPosed = lsMutualCalibrateWithHorizontalChessboard(cameraGravity, mgsIMU, mCamera2IMU);
+	}
+
+	return wellPosed;
 }

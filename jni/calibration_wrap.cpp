@@ -839,65 +839,7 @@ jdoubleArray SWIG_JavaArrayOutDouble (JNIEnv *jenv, double *result, jsize sz) {
 extern "C" {
 #endif
 
-SWIGEXPORT jlong JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_new_1MutualCalibration_1_1SWIG_10(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2, jlong jarg3, jlong jarg4, jboolean jarg5, jboolean jarg6, jboolean jarg7, jboolean jarg8, jboolean jarg9) {
-  jlong jresult = 0 ;
-  size_t arg1 ;
-  size_t arg2 ;
-  size_t arg3 ;
-  size_t arg4 ;
-  bool arg5 ;
-  bool arg6 ;
-  bool arg7 ;
-  bool arg8 ;
-  bool arg9 ;
-  MutualCalibration *result = 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  arg1 = (size_t)jarg1; 
-  arg2 = (size_t)jarg2; 
-  arg3 = (size_t)jarg3; 
-  arg4 = (size_t)jarg4; 
-  arg5 = jarg5 ? true : false; 
-  arg6 = jarg6 ? true : false; 
-  arg7 = jarg7 ? true : false; 
-  arg8 = jarg8 ? true : false; 
-  arg9 = jarg9 ? true : false; 
-  result = (MutualCalibration *)new MutualCalibration(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9);
-  *(MutualCalibration **)&jresult = result; 
-  return jresult;
-}
-
-
-SWIGEXPORT jlong JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_new_1MutualCalibration_1_1SWIG_11(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2, jlong jarg3, jlong jarg4, jboolean jarg5, jboolean jarg6, jboolean jarg7, jboolean jarg8) {
-  jlong jresult = 0 ;
-  size_t arg1 ;
-  size_t arg2 ;
-  size_t arg3 ;
-  size_t arg4 ;
-  bool arg5 ;
-  bool arg6 ;
-  bool arg7 ;
-  bool arg8 ;
-  MutualCalibration *result = 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  arg1 = (size_t)jarg1; 
-  arg2 = (size_t)jarg2; 
-  arg3 = (size_t)jarg3; 
-  arg4 = (size_t)jarg4; 
-  arg5 = jarg5 ? true : false; 
-  arg6 = jarg6 ? true : false; 
-  arg7 = jarg7 ? true : false; 
-  arg8 = jarg8 ? true : false; 
-  result = (MutualCalibration *)new MutualCalibration(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8);
-  *(MutualCalibration **)&jresult = result; 
-  return jresult;
-}
-
-
-SWIGEXPORT jlong JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_new_1MutualCalibration_1_1SWIG_12(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2, jlong jarg3, jlong jarg4, jboolean jarg5, jboolean jarg6, jboolean jarg7) {
+SWIGEXPORT jlong JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_new_1MutualCalibration_1_1SWIG_10(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2, jlong jarg3, jlong jarg4, jboolean jarg5, jboolean jarg6, jboolean jarg7) {
   jlong jresult = 0 ;
   size_t arg1 ;
   size_t arg2 ;
@@ -923,7 +865,7 @@ SWIGEXPORT jlong JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_new_1Mu
 }
 
 
-SWIGEXPORT jlong JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_new_1MutualCalibration_1_1SWIG_13(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2, jlong jarg3, jlong jarg4, jboolean jarg5, jboolean jarg6) {
+SWIGEXPORT jlong JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_new_1MutualCalibration_1_1SWIG_11(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2, jlong jarg3, jlong jarg4, jboolean jarg5, jboolean jarg6) {
   jlong jresult = 0 ;
   size_t arg1 ;
   size_t arg2 ;
@@ -947,7 +889,7 @@ SWIGEXPORT jlong JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_new_1Mu
 }
 
 
-SWIGEXPORT jlong JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_new_1MutualCalibration_1_1SWIG_14(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2, jlong jarg3, jlong jarg4, jboolean jarg5) {
+SWIGEXPORT jlong JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_new_1MutualCalibration_1_1SWIG_12(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2, jlong jarg3, jlong jarg4, jboolean jarg5) {
   jlong jresult = 0 ;
   size_t arg1 ;
   size_t arg2 ;
@@ -969,7 +911,7 @@ SWIGEXPORT jlong JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_new_1Mu
 }
 
 
-SWIGEXPORT jlong JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_new_1MutualCalibration_1_1SWIG_15(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2, jlong jarg3, jlong jarg4) {
+SWIGEXPORT jlong JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_new_1MutualCalibration_1_1SWIG_13(JNIEnv *jenv, jclass jcls, jlong jarg1, jlong jarg2, jlong jarg3, jlong jarg4) {
   jlong jresult = 0 ;
   size_t arg1 ;
   size_t arg2 ;
@@ -1108,23 +1050,6 @@ SWIGEXPORT void JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_MutualCa
 }
 
 
-SWIGEXPORT jlong JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_MutualCalibration_1randPerm(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jlong jarg2) {
-  jlong jresult = 0 ;
-  MutualCalibration *arg1 = (MutualCalibration *) 0 ;
-  size_t arg2 ;
-  std::vector< size_t > result;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(MutualCalibration **)&jarg1; 
-  arg2 = (size_t)jarg2; 
-  result = ((MutualCalibration const *)arg1)->randPerm(arg2);
-  *(std::vector< size_t > **)&jresult = new std::vector< size_t >((const std::vector< size_t > &)result); 
-  return jresult;
-}
-
-
 SWIGEXPORT void JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_MutualCalibration_1calibrateCamera(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
   MutualCalibration *arg1 = (MutualCalibration *) 0 ;
   
@@ -1136,36 +1061,18 @@ SWIGEXPORT void JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_MutualCa
 }
 
 
-SWIGEXPORT void JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_MutualCalibration_1ransacMutualCalibrateWithHorizontalChessboard(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+SWIGEXPORT jboolean JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_MutualCalibration_1mutualCalibrate(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
+  jboolean jresult = 0 ;
   MutualCalibration *arg1 = (MutualCalibration *) 0 ;
+  bool result;
   
   (void)jenv;
   (void)jcls;
   (void)jarg1_;
   arg1 = *(MutualCalibration **)&jarg1; 
-  (arg1)->ransacMutualCalibrateWithHorizontalChessboard();
-}
-
-
-SWIGEXPORT void JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_MutualCalibration_1lsMutualCalibrateWithHorizontalChessboard(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  MutualCalibration *arg1 = (MutualCalibration *) 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(MutualCalibration **)&jarg1; 
-  (arg1)->lsMutualCalibrateWithHorizontalChessboard();
-}
-
-
-SWIGEXPORT void JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_MutualCalibration_1mutualCalibrate(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
-  MutualCalibration *arg1 = (MutualCalibration *) 0 ;
-  
-  (void)jenv;
-  (void)jcls;
-  (void)jarg1_;
-  arg1 = *(MutualCalibration **)&jarg1; 
-  (arg1)->mutualCalibrate();
+  result = (bool)(arg1)->mutualCalibrate();
+  jresult = (jboolean)result; 
+  return jresult;
 }
 
 
