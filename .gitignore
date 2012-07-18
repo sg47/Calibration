@@ -23,8 +23,8 @@ local.properties
 *~
 
 #
-*.jpg
-*.png
+
+
 
 #
 .classpath
