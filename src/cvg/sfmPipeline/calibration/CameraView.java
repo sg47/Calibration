@@ -57,7 +57,6 @@ public class CameraView extends AbstractCameraView {
 	@Override
 	public void grabAndProcess(){
 		// initialize calibration object
-		Log.i(TAG,checkerRows + ", " + checkerCols);
 		if(calibrationObject == null)
 		calibrationObject = new MutualCalibration(getFrameHeight(), getFrameWidth(), checkerRows, 
 				checkerCols, MODE_USEOPENCVCORNER, MODE_USEONLYIMU, MODE_USERANSCA);
@@ -127,7 +126,7 @@ public class CameraView extends AbstractCameraView {
             bmp.recycle();
             bmp = null;
         }
-        CalibrationActivity.updateUI(CalibrationActivity.IMAGES_TXT, String.valueOf(calibrationObject.getNumberOfImages()), null);
+        CalibrationActivity.updateUI(CalibrationActivity.IMAGES_TXT, calibrationObject.getNumberOfImages(), null);
         return bmp;
     }
     

@@ -58,7 +58,16 @@ public class CalibrationActivity extends Activity{
     private static TextView mMat_3_2;
     private static TextView mMat_3_3;
     
-    //--  Update UI mode
+    private static TextView mMati_1_1;
+    private static TextView mMati_1_2;
+    private static TextView mMati_1_3;
+    private static TextView mMati_2_1;
+    private static TextView mMati_2_2;
+    private static TextView mMati_2_3;
+    private static TextView mMati_3_1;
+    private static TextView mMati_3_2;
+    private static TextView mMati_3_3;
+    //--  Update UI mode        
     public static final int IMAGES_TXT = 0;
     public static final int SENSOR_TXT = 1;
     
@@ -169,13 +178,14 @@ public class CalibrationActivity extends Activity{
 		else{
 			double[] data1 = new double[9];
 			mView.calibrationObject.getRotationMatrix(data1); 
-			if(globalMode == MODE_CHECKERBOARD){
-				displayMatrix("Rot CAM2IMU", data1);
-				saveMatrix(data1, "CAM2IMU");
-			}else{
-				displayMatrix("Rot CAM2IMU", data1);
-				saveMatrix(data1, "CAM2IMU");
-			}
+			displayMatrix(0, data1);
+			saveMatrix(data1, "rotCam2imu");
+			
+			double[] data2 = new double[9];
+			mView.calibrationObject.getCameraMatrix(data2); 
+			displayMatrix(1, data2);
+			saveMatrix(data2, "camMatrix");
+			
 			mIsCalibrated = true;
 			setEnabledUI(true);
 			mButtonCalib.setEnabled(false);
@@ -201,10 +211,10 @@ public class CalibrationActivity extends Activity{
 		
 	}
 
-	public static void updateUI(int what, String noIms, SensorEvent event){
+	public static void updateUI(int what, long noIms, SensorEvent event){
 		switch (what){
 			case CalibrationActivity.IMAGES_TXT:
-				mTextNoImgs.setText("Calib Images: " + noIms);
+				mButtonGrab.setText("Grab Calib Image " + String.valueOf(noIms+1));
 				break;
 			case CalibrationActivity.SENSOR_TXT:
 				String valuesStr = "";
@@ -223,17 +233,29 @@ public class CalibrationActivity extends Activity{
 	
 
 	
-	public static void displayMatrix(String label, double[] vals){
-		mMatLabel.setText(label);
-		mMat_1_1.setText(numberDisplayFormatter(vals[0]));
-		mMat_1_2.setText(numberDisplayFormatter(vals[1]));
-		mMat_1_3.setText(numberDisplayFormatter(vals[2]));
-		mMat_2_1.setText(numberDisplayFormatter(vals[3])); 
-		mMat_2_2.setText(numberDisplayFormatter(vals[4]));
-		mMat_2_3.setText(numberDisplayFormatter(vals[5]));
-		mMat_3_1.setText(numberDisplayFormatter(vals[6]));
-		mMat_3_2.setText(numberDisplayFormatter(vals[7]));
-		mMat_3_3.setText(numberDisplayFormatter(vals[8]));
+	public static void displayMatrix(int type, double[] vals){
+		// type is 0 for rotation and 1 for intrisnics matrix
+		if (type == 0){
+			mMat_1_1.setText(numberDisplayFormatter(vals[0]));
+			mMat_1_2.setText(numberDisplayFormatter(vals[1]));
+			mMat_1_3.setText(numberDisplayFormatter(vals[2]));
+			mMat_2_1.setText(numberDisplayFormatter(vals[3])); 
+			mMat_2_2.setText(numberDisplayFormatter(vals[4]));
+			mMat_2_3.setText(numberDisplayFormatter(vals[5]));
+			mMat_3_1.setText(numberDisplayFormatter(vals[6]));
+			mMat_3_2.setText(numberDisplayFormatter(vals[7]));
+			mMat_3_3.setText(numberDisplayFormatter(vals[8]));
+		}else{
+			mMati_1_1.setText(numberDisplayFormatter(vals[0]));
+			mMati_1_2.setText(numberDisplayFormatter(vals[1]));
+			mMati_1_3.setText(numberDisplayFormatter(vals[2]));
+			mMati_2_1.setText(numberDisplayFormatter(vals[3])); 
+			mMati_2_2.setText(numberDisplayFormatter(vals[4]));
+			mMati_2_3.setText(numberDisplayFormatter(vals[5]));
+			mMati_3_1.setText(numberDisplayFormatter(vals[6]));
+			mMati_3_2.setText(numberDisplayFormatter(vals[7]));
+			mMati_3_3.setText(numberDisplayFormatter(vals[8]));
+		}
 	}
 	
 	public static void setEnabledUI(boolean enabled){
@@ -252,7 +274,7 @@ public class CalibrationActivity extends Activity{
         Log.i(TAG, "onCreate");
         setContentView(R.layout.main);
         mView = (CameraView)findViewById(R.id.cameraViewer);
-        mTextNoImgs = (TextView)findViewById(R.id.textNoImages);
+//        mTextNoImgs = (TextView)findViewById(R.id.textNoImages);
         mButtonGrab = (Button)findViewById(R.id.grabImage);
         mButtonCalib = (Button)findViewById(R.id.calibrate);
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -274,6 +296,16 @@ public class CalibrationActivity extends Activity{
         mMat_3_2 = (TextView) findViewById(R.id.matrix_3_2);
         mMat_3_3 = (TextView) findViewById(R.id.matrix_3_3);
         
+        mMati_1_1 = (TextView) findViewById(R.id.imatrix_1_1);
+        mMati_1_2 = (TextView) findViewById(R.id.imatrix_1_2);
+        mMati_1_3 = (TextView) findViewById(R.id.imatrix_1_3);
+        mMati_2_1 = (TextView) findViewById(R.id.imatrix_2_1);
+        mMati_2_2 = (TextView) findViewById(R.id.imatrix_2_2);
+        mMati_2_3 = (TextView) findViewById(R.id.imatrix_2_3);
+        mMati_3_1 = (TextView) findViewById(R.id.imatrix_3_1);
+        mMati_3_2 = (TextView) findViewById(R.id.imatrix_3_2);
+        mMati_3_3 = (TextView) findViewById(R.id.imatrix_3_3);
+            
         
         
     }
@@ -311,7 +343,7 @@ public class CalibrationActivity extends Activity{
         @Override
         public void onSensorChanged(SensorEvent event) {
         	latestSensor = event.values;
-            updateUI(CalibrationActivity.SENSOR_TXT, null, event);
+            updateUI(CalibrationActivity.SENSOR_TXT, 0, event);
         }
 
         @Override
@@ -457,13 +489,13 @@ public class CalibrationActivity extends Activity{
         if (value >= 0) {
             displayedText = " " + displayedText;
         }
-        if (displayedText.length() > 8) {
-            displayedText = displayedText.substring(0, 8);
+        if (displayedText.length() > 5) {
+            displayedText = displayedText.substring(0, 5);
         }
-        while (displayedText.length() < 8) {
+        while (displayedText.length() < 5) {
             displayedText = displayedText + " ";
         }
-        return displayedText;
+        return displayedText+"  ";
     }
     private static String numberDisplayFormatter(double value) {
         String displayedText = String.format("%.3f", (float)value);

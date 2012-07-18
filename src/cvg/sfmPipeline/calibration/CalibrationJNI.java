@@ -19,6 +19,7 @@ public class CalibrationJNI {
   public final static native void MutualCalibration_addIMUGravityVector(long jarg1, MutualCalibration jarg1_, double jarg2, double jarg3, double jarg4);
   public final static native long MutualCalibration_getNumberOfImages(long jarg1, MutualCalibration jarg1_);
   public final static native void MutualCalibration_getRotationMatrix(long jarg1, MutualCalibration jarg1_, double[] jarg2);
+  public final static native void MutualCalibration_getCameraMatrix(long jarg1, MutualCalibration jarg1_, double[] jarg2);
   public final static native void MutualCalibration_calibrateCamera(long jarg1, MutualCalibration jarg1_);
   public final static native boolean MutualCalibration_mutualCalibrate(long jarg1, MutualCalibration jarg1_);
   public final static native void delete_MutualCalibration(long jarg1);
