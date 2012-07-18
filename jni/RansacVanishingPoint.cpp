@@ -138,6 +138,13 @@ RansacVanishingPoint::getRotation() const
 	
 }
 
+float
+RansacVanishingPoint::getFocal() const
+{
+	return mFocal;
+}
+}
+
 std::vector<cv::Point2f>
 RansacVanishingPoint::selectOrthogonalVanishingPts() const
 {

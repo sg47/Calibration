@@ -16,7 +16,8 @@ class MutualCalibration
 //	std::vector<cv::Mat> mChessboardImages; 
 	std::vector<std::vector<cv::Point2f> > mImagePoints; 
 	
-	vcharge::CataCameraParameters mCameraParam; 
+//	vcharge::CataCameraParameters mCameraParam;
+	cv::Mat mKCamera;
 	std::vector<cv::Mat> mRsCamera, mtsCamera; //, mgsCamera;
 	std::vector<float> mfsCamera; 
 	std::vector<cv::Mat> mgsIMU; //mRsIMU,
@@ -48,6 +49,7 @@ public:
 	void addIMUGravityVector(double g1, double g2, double g3); 
 	size_t getNumberOfImages() const; 
 	void getRotationMatrix(double p[]) const; 
+	void getCameraMatrix(double p[]) const;
 	void calibrateCamera();
 	bool mutualCalibrate();
 protected:

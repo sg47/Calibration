@@ -62,8 +62,20 @@ MutualCalibration::getRotationMatrix(double p[]) const
 	p[6] = mCamera2IMU.at<double>(2, 0); 
 	p[7] = mCamera2IMU.at<double>(2, 1); 
 	p[8] = mCamera2IMU.at<double>(2, 2); 
+}
 
-
+void
+MutualCalibration::getCameraMatrix(double p[]) const
+{
+	p[0] = mKCamera.at<double>(0, 0);
+	p[1] = mKCamera.at<double>(0, 1);
+	p[2] = mKCamera.at<double>(0, 2);
+	p[3] = mKCamera.at<double>(1, 0);
+	p[4] = mKCamera.at<double>(1, 1);
+	p[5] = mKCamera.at<double>(1, 2);
+	p[6] = mKCamera.at<double>(2, 0);
+	p[7] = mKCamera.at<double>(2, 1);
+	p[8] = mKCamera.at<double>(2, 2);
 }
 
 std::vector<size_t>
@@ -141,9 +153,11 @@ MutualCalibration::tryAddingVanishingPointImage(cv::Mat & inputImage, cv::Mat & 
 	if (vanishingPoint.orthogonalityDetected())
 	{
 		cv::Mat R = vanishingPoint.getRotation(); 
-		std::vector<cv::Point2f> ovpts = vanishingPoint.selectOrthogonalVanishingPts(); 
+		std::vector<cv::Point2f> ovpts = vanishingPoint.selectOrthogonalVanishingPts();
+
 		
-		mRsCamera.push_back(R * 1.0); 
+		mRsCamera.push_back(R * 1.0);
+		mfsCamera.push_back(vanishingPoint.getFocal());
 		mVanishingPointImages++; 
 		return true; 
 	}
@@ -153,7 +167,25 @@ MutualCalibration::tryAddingVanishingPointImage(cv::Mat & inputImage, cv::Mat & 
 void 
 MutualCalibration::calibrateCamera()
 {
-	if (mImagePoints.empty()) return; 
+	if (mImagePoints.empty())
+	{
+		float focal = 0;
+		for (size_t i = 0; i < mfsCamera.size(); i++)
+			focal += mfsCamera[i];
+		focal / mfsCamera.size();
+		cv::Mat cameraMatrix(3, 3, CV_64F);
+		cameraMatrix.at<double>(0, 0) = focal;
+		cameraMatrix.at<double>(0, 1) = 0;
+		cameraMatrix.at<double>(0, 2) = (float)mImageSize.width / 2;
+		cameraMatrix.at<double>(1, 0) = 0;
+		cameraMatrix.at<double>(1, 1) = focal;
+		cameraMatrix.at<double>(1, 2) = (float)mImageSize.height / 2;
+		cameraMatrix.at<double>(2, 0) = 0;
+		cameraMatrix.at<double>(2, 1) = 0;
+		cameraMatrix.at<double>(2, 2) = 1;
+		cameraMatrix.copyTo(mKCamera);
+		return;
+	}
 	
     std::vector< std::vector<cv::Point3f> > objectPoints;
     for (int i = 0; i < mImagePoints.size(); ++i)
@@ -174,7 +206,7 @@ MutualCalibration::calibrateCamera()
 	if (1)
 	{	
 		cv::calibrateCamera(objectPoints, mImagePoints, mImageSize, cameraMatrix, distCoeffs, rvecs, mtsCamera); 
-
+		cameraMatrix.copyTo(mKCamera);
 		for (size_t i = 0; i < rvecs.size(); i++)
 		{
 			cv::Mat RCamera; 
