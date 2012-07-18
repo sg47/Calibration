@@ -264,7 +264,7 @@ MutualCalibration::ransacMutualCalibrateWithHorizontalChessboard(const std::vect
 {
 	// RANSAC
 	size_t it = 0;
-	size_t max_iter = 10;
+	size_t max_iter = 100;
 	cv::Mat R_best;
 	size_t max_inliers = 0;
 
@@ -311,16 +311,20 @@ MutualCalibration::ransacMutualCalibrateWithHorizontalChessboard(const std::vect
 	}
 
 	if (max_inliers > 0)
+	{
 		__android_log_print(
 			ANDROID_LOG_INFO, "R_best", "%lf %lf %lf \n %lf %lf %lf \n %lf %lf %lf\n %d",
 			R_best.at<double>(0, 0), R_best.at<double>(0, 1), R_best.at<double>(0, 2),
 			R_best.at<double>(1, 0), R_best.at<double>(1, 1), R_best.at<double>(1, 2),
 			R_best.at<double>(2, 0), R_best.at<double>(2, 1), R_best.at<double>(2, 2), max_inliers);
+
+		R_best.copyTo(outputRotation);
+	}
 	else
 		__android_log_print(
 			ANDROID_LOG_INFO, "R_best", "Weird");
 
-	R_best.copyTo(outputRotation);
+
 	return max_inliers >= 3;
 
 }

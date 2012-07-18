@@ -4,7 +4,6 @@ package cvg.sfmPipeline.calibration;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -72,11 +71,14 @@ public class CalibrationActivity extends Activity{
 	private static final int PRESET_1 = 6;
 	private static final int PRESET_2 = 7;
 	private static final int USER_DEFINED = 8;
+	private static final int CHCK_SIZE_OPTS = 9;
 	private int checkH = 6;
 	private int checkW = 9;
 	
 	public static final int MODE_CHECKERBOARD = 0;
 	public static final int MODE_VANISHPT = 1;
+
+	
 	public static int globalMode = MODE_CHECKERBOARD;
 	//--   Sensor readings buffers
     public static float[] latestSensor;
@@ -124,15 +126,22 @@ public class CalibrationActivity extends Activity{
 	}
 	
 	public void clickCalibrate(View view){
+		
 		if(mView.calibrationObject == null){
 			(Toast.makeText(this, "Please take 3 images of a calibration pattern first!", Toast.LENGTH_SHORT)).show();
 			return;
 		}
 		
-
-		if(mView.calibrationObject.getNumberOfImages() < 3){
-			(Toast.makeText(this, "Please take 3 images of a calibration pattern first!", Toast.LENGTH_SHORT)).show();
-			return;
+		if(mView.MODE_USERANSCA){
+			if(mView.calibrationObject.getNumberOfImages() < 5){
+				(Toast.makeText(this, "Please take 5 calibration images first!", Toast.LENGTH_SHORT)).show();
+				return;
+			}
+		}else{
+			if(mView.calibrationObject.getNumberOfImages() < 3){
+				(Toast.makeText(this, "Please take 3 calibration images first!", Toast.LENGTH_SHORT)).show();
+				return;
+			}
 		}
 		
 		setEnabledUI(false);
@@ -142,33 +151,36 @@ public class CalibrationActivity extends Activity{
 		if (!wellPosed)
 		{
 			AlertDialog.Builder alertBuilder = new AlertDialog.Builder(this);
-        	alertBuilder.setTitle("Calibration failed, possibly due to ill-posed captured data. Try capturing data diversely. ");
+        	alertBuilder.setTitle("Calibration failed, possibly due to ill-posed captured data.");
+        	alertBuilder.setMessage("Try capturing data diversely. Grab more images or restart the app.");
         	alertBuilder
         		.setCancelable(false)
         		.setPositiveButton("OK", new DialogInterface.OnClickListener() {
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
-						finish();
+//						finish();
+						setEnabledUI(true);
+						dialog.dismiss();
 					}
 				});
         	AlertDialog alert = alertBuilder.create();
         	alert.show();
 		}
-		
-		double[] data1 = new double[9];
-		mView.calibrationObject.getRotationMatrix(data1); 
-		if(globalMode == MODE_CHECKERBOARD){
-			displayMatrix("Rot CAM2IMU", data1);
-			saveMatrix(data1, "CAM2IMU");
-		}else{
-			displayMatrix("Rot CAM2IMU", data1);
-			saveMatrix(data1, "CAM2IMU");
+		else{
+			double[] data1 = new double[9];
+			mView.calibrationObject.getRotationMatrix(data1); 
+			if(globalMode == MODE_CHECKERBOARD){
+				displayMatrix("Rot CAM2IMU", data1);
+				saveMatrix(data1, "CAM2IMU");
+			}else{
+				displayMatrix("Rot CAM2IMU", data1);
+				saveMatrix(data1, "CAM2IMU");
+			}
+			mIsCalibrated = true;
+			setEnabledUI(true);
+			mButtonCalib.setEnabled(false);
+			mButtonGrab.setText("Grab Image");
 		}
-		mIsCalibrated = true;
-		setEnabledUI(true);
-		mButtonCalib.setEnabled(false);
-		mButtonGrab.setText("Grab Image");
-		
 	}
 	
 	private void saveMatrix(double[] matrix, String filename) {
@@ -283,6 +295,8 @@ public class CalibrationActivity extends Activity{
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
 				globalMode = MODE_VANISHPT;
+				openOptionsMenu();
+				closeOptionsMenu();
 				dialog.dismiss();
 			}
 		});
@@ -313,7 +327,7 @@ public class CalibrationActivity extends Activity{
         menu.add(0, ONLY_IMU, 0, "Use only IMU").setCheckable(true).setChecked(true);
 //        menu.add(0, CHESS_HORIZ, 0, "Horizontal").setCheckable(true).setChecked(false);
         
-        SubMenu sm = menu.addSubMenu("Checkerboard Options");
+        SubMenu sm = menu.addSubMenu(1,CHCK_SIZE_OPTS, 0, "Checkerboard Options");
         sm.add(1, PRESET_1, 0, "Preset 1");
         sm.add(1, PRESET_2, 0, "Preset 2");
         sm.add(1, USER_DEFINED, 0, "User Defined");
@@ -401,11 +415,15 @@ public class CalibrationActivity extends Activity{
 	@Override
     public boolean onPrepareOptionsMenu(Menu menu){
     	super.onPrepareOptionsMenu(menu);
-    	if(globalMode == MODE_VANISHPT) closeOptionsMenu();
     	if (mCalibImagesStarted){
     		for (int i = 0; i < menu.size(); i++) {
 				menu.getItem(i).setEnabled(false);
 			}
+    	}else if(globalMode == MODE_VANISHPT) {
+    		// disable a bunch of options
+    		menu.findItem(SUB_PIX_ACC).setEnabled(false);
+    		menu.findItem(OPENCV_CALIB).setEnabled(false);
+    		menu.findItem(CHCK_SIZE_OPTS).setEnabled(false);
     	}
     	String str = String.format("User defined" );
     	menu.findItem(USER_DEFINED).setTitle(str);
@@ -487,7 +505,7 @@ public class CalibrationActivity extends Activity{
         	return super.onKeyDown(KeyEvent.KEYCODE_BACK, event);
         }
         if (keyCode == KeyEvent.KEYCODE_MENU){
-        	if(globalMode == MODE_VANISHPT)
+        	if(false)//(globalMode == MODE_VANISHPT)
         		super.onKeyDown(KeyEvent.KEYCODE_1, event);
         	else{
         		super.onKeyDown(KeyEvent.KEYCODE_MENU, event);
