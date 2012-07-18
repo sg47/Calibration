@@ -177,12 +177,16 @@ public class CalibrationActivity extends Activity{
 		}
 		else{
 			double[] data1 = new double[9];
+			Log.i("rot", "do");
 			mView.calibrationObject.getRotationMatrix(data1); 
 			displayMatrix(0, data1);
 			saveMatrix(data1, "rotCam2imu");
 			
+			Log.i("rot", "got"); 
+			
 			double[] data2 = new double[9];
 			mView.calibrationObject.getCameraMatrix(data2); 
+			Log.i("rot", "got2"); 
 			displayMatrix(1, data2);
 			saveMatrix(data2, "camMatrix");
 			

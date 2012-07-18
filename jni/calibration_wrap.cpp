@@ -1050,6 +1050,22 @@ SWIGEXPORT void JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_MutualCa
 }
 
 
+SWIGEXPORT void JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_MutualCalibration_1getCameraMatrix(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_, jdoubleArray jarg2) {
+  MutualCalibration *arg1 = (MutualCalibration *) 0 ;
+  double *arg2 ;
+  jdouble *jarr2 ;
+  
+  (void)jenv;
+  (void)jcls;
+  (void)jarg1_;
+  arg1 = *(MutualCalibration **)&jarg1; 
+  if (!SWIG_JavaArrayInDouble(jenv, &jarr2, &arg2, jarg2)) return ; 
+  ((MutualCalibration const *)arg1)->getCameraMatrix(arg2);
+  SWIG_JavaArrayArgoutDouble(jenv, jarr2, arg2, jarg2); 
+  delete [] arg2; 
+}
+
+
 SWIGEXPORT void JNICALL Java_cvg_sfmPipeline_calibration_CalibrationJNI_MutualCalibration_1calibrateCamera(JNIEnv *jenv, jclass jcls, jlong jarg1, jobject jarg1_) {
   MutualCalibration *arg1 = (MutualCalibration *) 0 ;
   
