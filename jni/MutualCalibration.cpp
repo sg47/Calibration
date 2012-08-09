@@ -178,7 +178,7 @@ MutualCalibration::calibrateCamera()
 		float focal = 0;
 		for (size_t i = 0; i < mfsCamera.size(); i++)
 			focal += mfsCamera[i];
-		focal /= mfsCamera.size();
+		focal / mfsCamera.size();
 		cv::Mat cameraMatrix(3, 3, CV_64F);
 		cameraMatrix.at<double>(0, 0) = focal;
 		cameraMatrix.at<double>(0, 1) = 0;
