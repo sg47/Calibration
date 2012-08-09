@@ -53,29 +53,35 @@ MutualCalibration::getNumberOfImages() const
 void
 MutualCalibration::getRotationMatrix(double p[]) const
 {
-	p[0] = mCamera2IMU.at<double>(0, 0); 
-	p[1] = mCamera2IMU.at<double>(0, 1); 
-	p[2] = mCamera2IMU.at<double>(0, 2); 
-	p[3] = mCamera2IMU.at<double>(1, 0); 
-	p[4] = mCamera2IMU.at<double>(1, 1); 
-	p[5] = mCamera2IMU.at<double>(1, 2); 
-	p[6] = mCamera2IMU.at<double>(2, 0); 
-	p[7] = mCamera2IMU.at<double>(2, 1); 
-	p[8] = mCamera2IMU.at<double>(2, 2); 
+	// store columnwise
+	cv::Mat mCamera2IMU2;
+	cv::transpose(mCamera2IMU, mCamera2IMU2);
+	p[0] = mCamera2IMU2.at<double>(0, 0);
+	p[1] = mCamera2IMU2.at<double>(0, 1);
+	p[2] = mCamera2IMU2.at<double>(0, 2);
+	p[3] = mCamera2IMU2.at<double>(1, 0);
+	p[4] = mCamera2IMU2.at<double>(1, 1);
+	p[5] = mCamera2IMU2.at<double>(1, 2);
+	p[6] = mCamera2IMU2.at<double>(2, 0);
+	p[7] = mCamera2IMU2.at<double>(2, 1);
+	p[8] = mCamera2IMU2.at<double>(2, 2);
 }
 
 void
 MutualCalibration::getCameraMatrix(double p[]) const
 {
-	p[0] = mKCamera.at<double>(0, 0);
-	p[1] = mKCamera.at<double>(0, 1);
-	p[2] = mKCamera.at<double>(0, 2);
-	p[3] = mKCamera.at<double>(1, 0);
-	p[4] = mKCamera.at<double>(1, 1);
-	p[5] = mKCamera.at<double>(1, 2);
-	p[6] = mKCamera.at<double>(2, 0);
-	p[7] = mKCamera.at<double>(2, 1);
-	p[8] = mKCamera.at<double>(2, 2);
+	// store columnwise
+	cv::Mat mKCamera2;
+	cv::transpose(mKCamera, mKCamera2);
+	p[0] = mKCamera2.at<double>(0, 0);
+	p[1] = mKCamera2.at<double>(0, 1);
+	p[2] = mKCamera2.at<double>(0, 2);
+	p[3] = mKCamera2.at<double>(1, 0);
+	p[4] = mKCamera2.at<double>(1, 1);
+	p[5] = mKCamera2.at<double>(1, 2);
+	p[6] = mKCamera2.at<double>(2, 0);
+	p[7] = mKCamera2.at<double>(2, 1);
+	p[8] = mKCamera2.at<double>(2, 2);
 }
 
 std::vector<size_t>

@@ -4,8 +4,10 @@ package cvg.sfmPipeline.calibration;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -194,15 +196,13 @@ public class CalibrationActivity extends Activity{
 	}
 	
 	private void saveMatrix(double[] matrix, String filename) {
-		File matFile = new File(mView.getDataFolder() + String.format("/%s.txt", filename));
-		String str = String.format("%f  %f  %f\n%f  %f  %f\n%f  %f  %f", 
-				matrix[0], matrix[1], matrix[2], matrix[3], matrix[4], matrix[5], 
-				matrix[6], matrix[7], matrix[8] );
+		File matFile = new File(mView.getDataFolder() + String.format("/%s.dat", filename));
         try {
-			BufferedWriter writer = new BufferedWriter(new FileWriter(matFile));
-			writer.write(str);
-			writer.flush();
-			writer.close();
+        	FileOutputStream fos = new FileOutputStream(matFile);
+        	ObjectOutputStream obj = new ObjectOutputStream(fos);
+        	for(int i = 0; i < matrix.length; i++)
+        		obj.writeDouble(matrix[i]);
+        	obj.close();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -515,7 +515,7 @@ public class CalibrationActivity extends Activity{
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK) {
         	AlertDialog.Builder alertBuilder = new AlertDialog.Builder(this);
-        	alertBuilder.setTitle("Exit application?");
+        	alertBuilder.setTitle("Exit calibration?");
         	alertBuilder
         		.setCancelable(true)
         		.setPositiveButton("Yes", new DialogInterface.OnClickListener() {

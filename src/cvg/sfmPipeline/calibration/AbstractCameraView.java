@@ -44,7 +44,7 @@ public abstract class AbstractCameraView extends SurfaceView implements SurfaceH
         
         Log.i(TAG, "Instantiated new " + this.getClass());
         mDataFolder = Environment.getExternalStorageDirectory().getPath()
-        		+ "/CalibrationData/" + CalibrationActivity.filePathUniqueIdentifier;
+        		+ "/CalibrationData/";// + CalibrationActivity.filePathUniqueIdentifier;
         File thisNewFolder = new File(mDataFolder);
         thisNewFolder.mkdirs();
     }
