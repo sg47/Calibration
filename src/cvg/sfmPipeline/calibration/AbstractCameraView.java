@@ -6,6 +6,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.List;
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -30,8 +32,8 @@ public abstract class AbstractCameraView extends SurfaceView implements SurfaceH
     private String 				mDataFolder;
     private Camera              mCamera;
     private SurfaceHolder       mHolder;
-    private int                 mFrameWidth;
-    private int                 mFrameHeight;
+    public int                 mFrameWidth;
+    public int                 mFrameHeight;
     private Bitmap 				mBitmap;
     private ImageView			view;
     private int 				numImage = 0;
@@ -172,9 +174,21 @@ public abstract class AbstractCameraView extends SurfaceView implements SurfaceH
                 // hardcoded ( FIXME )
                 mFrameWidth = 640;
                 mFrameHeight = 480;
-                
+
+                List<Camera.Size> sizes = params.getSupportedPreviewSizes();
+                List<String> focuses 	= params.getSupportedFocusModes();
+                for (Camera.Size element : sizes)
+                	Log.v(TAG, "supports size: " + element.width + ", " + element.height);
+
+                for (String element : focuses)
+                	Log.v(TAG, "supports focus type: " + element);
+
                 params.setPreviewSize(getFrameWidth(), getFrameHeight());
-                params.setFocusMode(Camera.Parameters.FOCUS_MODE_INFINITY);
+
+                if (focuses.contains("infinity"))
+	                params.setFocusMode(Camera.Parameters.FOCUS_MODE_INFINITY);
+                else
+	                params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
                 
                 mCamera.setParameters(params);
                 params = mCamera.getParameters();

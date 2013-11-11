@@ -1,10 +1,13 @@
 LOCAL_PATH := $(call my-dir)
 
+OPENCV_CAMERA_MODULES:=on
+OPENCV_INSTALL_MODULES:=on
+
 include $(CLEAR_VARS)
 
 OPENCV_CAMERA_MODULES:=off
 
-OPENCV_MK_PATH:=/home/li/Workspace/temp/OpenCV-2.4.1-android-bin2/OpenCV-2.4.1/share/opencv/OpenCV.mk
+OPENCV_MK_PATH:=/home/fede/Research/inervis_sfm/OpenCV-2.4.6-android-sdk/sdk/native/jni/OpenCV.mk
 
 include $(OPENCV_MK_PATH)
 

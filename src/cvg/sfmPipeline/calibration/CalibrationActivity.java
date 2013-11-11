@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -188,6 +189,8 @@ public class CalibrationActivity extends Activity{
 			displayMatrix(1, data2);
 			saveMatrix(data2, "camMatrix");
 			
+			saveParameters(data2, "calibration");
+			
 			mIsCalibrated = true;
 			setEnabledUI(true);
 			mButtonCalib.setEnabled(false);
@@ -195,13 +198,36 @@ public class CalibrationActivity extends Activity{
 		}
 	}
 	
+	private void saveParameters(double[] params, String filename) {
+		File matFile = new File(mView.getDataFolder() + String.format("/%s.cfg", filename));
+        try {
+        	FileOutputStream fos = new FileOutputStream(matFile);
+        	PrintStream prnt = new PrintStream(fos);
+        	double w = (double)mView.mFrameWidth;
+        	double h = (double)mView.mFrameHeight;
+        	double fx = params[0]/w;
+        	double fy = params[4]/h;
+        	double cx = params[6]/w;
+        	double cy = params[7]/h;
+        	prnt.print(fx); prnt.print(" ");
+        	prnt.print(fy); prnt.print(" ");
+        	prnt.print(cx); prnt.print(" ");
+        	prnt.print(cy);
+        	prnt.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} 
+		
+	}
+
 	private void saveMatrix(double[] matrix, String filename) {
 		File matFile = new File(mView.getDataFolder() + String.format("/%s.dat", filename));
         try {
         	FileOutputStream fos = new FileOutputStream(matFile);
         	ObjectOutputStream obj = new ObjectOutputStream(fos);
-        	for(int i = 0; i < matrix.length; i++)
+        	for(int i = 0; i < matrix.length; i++) {
         		obj.writeDouble(matrix[i]);
+        	}
         	obj.close();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -343,7 +369,8 @@ public class CalibrationActivity extends Activity{
         @Override
         public void onSensorChanged(SensorEvent event) {
         	latestSensor = event.values;
-            updateUI(CalibrationActivity.SENSOR_TXT, 0, event);
+        	Log.e(TAG, "Some values: " + event.values[0]);
+        	updateUI(CalibrationActivity.SENSOR_TXT, 0, event);
         }
 
         @Override
@@ -477,8 +504,9 @@ public class CalibrationActivity extends Activity{
     	
     	mSensorManager.unregisterListener(mSensorEventListener);
         for (Sensor sensor : sensors) {
-			if(!logList.contains(sensor.getType()) || sensor.getVendor().equalsIgnoreCase("Google Inc."))
-				continue;
+        	Log.e(TAG, "Sensor name: " + sensor.getName());
+//			if(!logList.contains(sensor.getType()) || sensor.getVendor().equalsIgnoreCase("Google Inc."))
+//				continue;
 			mSensorManager.registerListener(mSensorEventListener, sensor, SensorManager.SENSOR_DELAY_FASTEST);
 		}
     	

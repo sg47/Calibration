@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 
+import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -149,8 +150,11 @@ public class CameraView extends AbstractCameraView {
 	public native void FindFeatures(long matAddrGr, long matAddrRgba, boolean mode);
 
     static {
-    	System.loadLibrary("opencv_java");
-        System.loadLibrary("mixed_sample");
+		if (!OpenCVLoader.initDebug()) {
+		        // Handle initialization error
+	    } else {
+		        System.loadLibrary("mixed_sample");
+	    }
     }
 
 }
